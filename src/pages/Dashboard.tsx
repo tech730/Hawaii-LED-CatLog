@@ -174,9 +174,13 @@ const Dashboard: React.FC = () => {
   const totalUnits = widthCols * heightRows;
   
   // Power & Weight
-  const weightPerSqm = 25; // User specified 25sqm weight (likely means 25kg/sqm)
-  const totalWeight = (parseFloat(totalArea) * weightPerSqm).toFixed(1);
-  
+  let totalWeight = "";
+  if (isRental) {
+    totalWeight = (totalUnits * 7.6).toFixed(1);
+  } else {
+    const weightPerSqm = 25; // User specified 25sqm weight (likely means 25kg/sqm)
+    totalWeight = (parseFloat(totalArea) * weightPerSqm).toFixed(1);
+  }
   const maxPowerPerSqm = isOutdoor ? 800 : 600;
   const typPowerPerSqm = isOutdoor ? 260 : 200;
   const powerMax = (parseFloat(totalArea) * maxPowerPerSqm).toFixed(0);
@@ -186,10 +190,17 @@ const Dashboard: React.FC = () => {
   const heatTyp = (Number(powerTyp) * 3.41).toFixed(0);
   const heatMax = (Number(powerMax) * 3.41).toFixed(0);
 
-  // Power Supply BOM logic (60A 300W)
+  // Power Supply / Distribution BOM logic
   let powerSupplyQty = 0;
+  let powerSupplyLabel = 'Power Supply';
+  let powerSupplyModel = `${activePower.name} 5V 40A/60A`;
+  let powerSupplySpec = activePower.desc;
+
   if (isRental) {
-    powerSupplyQty = totalUnits; // 1 per 500x500 cabinet
+    powerSupplyQty = Math.ceil(totalUnits / 16); 
+    powerSupplyLabel = 'Main Power Cable';
+    powerSupplyModel = '16A Power Line';
+    powerSupplySpec = '1 Cable per 16 Cabinets';
   } else {
     // totalUnits = number of 320x160 modules
     powerSupplyQty = isOutdoor ? Math.ceil(totalUnits / 8) : Math.ceil(totalUnits / 10);
@@ -224,7 +235,7 @@ const Dashboard: React.FC = () => {
     { id: 'b1', item: 'LED Module', model: `${activeBrand.name} P${activePitch} ${isRental ? 'Rental' : (isOutdoor ? 'Outdoor' : 'Indoor')}`, qty: totalUnits, spec: `${isRental ? '500x500mm' : '320x160mm'} Panel` },
     { id: 'b2', item: 'Receiving Card', model: currentCard.model, qty: receivingCardQty, spec: `${currentCard.spec} (Load limit: 80%)` },
     { id: 'b3', item: 'Controller', model: `${activeControlBrand.name} ${activeProcessor.name}`, qty: 1, spec: `${activeProcessor.ports} Ports / ${activeProcessor.capacity.toLocaleString()} Pixels` },
-    { id: 'b4', item: 'Power Supply', model: `${activePower.name} 5V 40A/60A`, qty: powerSupplyQty, spec: activePower.desc },
+    { id: 'b4', item: powerSupplyLabel, model: powerSupplyModel, qty: powerSupplyQty, spec: powerSupplySpec },
     { id: 'b5', item: 'Total Weight', model: 'Calculated Structural Load', qty: 1, spec: `~ ${totalWeight} kg` },
     { id: 'b6', item: 'Power Consumption', model: 'Maximum Load @ 230V', qty: 1, spec: `${powerMax}W (Max) / ~ ${ampsMax}A` },
   ];
