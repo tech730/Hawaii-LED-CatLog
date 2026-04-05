@@ -37,8 +37,9 @@ const CONTROL_SYSTEMS = [
       { id: 'vx600', name: 'VX600', ports: 6, capacity: 3900000, desc: 'All-in-One Controller' },
       { id: 'vx1000', name: 'VX1000', ports: 10, capacity: 6500000, desc: 'Professional Controller' },
       { id: 'vx2000pro', name: 'VX2000 Pro', ports: 20, capacity: 13000000, desc: 'Ultra-Professional Controller' },
-      { id: 'h2', name: 'H2 Video Wall Processor', ports: 32, capacity: 13000000, desc: 'Modular Splicing Processor' },
-      { id: 'h5', name: 'H5 Video Wall Processor', ports: 40, capacity: 31200000, desc: 'Modular Splicing Processor' },
+      { id: 'h2_32', name: 'H2 (32 Port)', ports: 32, capacity: 20800000, desc: 'Modular Splicing Processor' },
+      { id: 'h2_40', name: 'H2 (40 Port)', ports: 40, capacity: 26000000, desc: 'Modular Splicing Processor' },
+      { id: 'h5', name: 'H5 Video Wall Processor', ports: 56, capacity: 36400000, desc: 'Modular Splicing Processor' },
       { id: 'h9', name: 'H9 Video Wall Processor', ports: 80, capacity: 65000000, desc: 'Modular Splicing Processor' },
     ]
   },
@@ -229,7 +230,7 @@ const Dashboard: React.FC = () => {
   ];
 
   const portsRequired = Math.ceil(totalPixels / 650000);
-  const isOverCapacity = totalPixels > activeProcessor.capacity;
+  const isOverCapacity = (totalPixels > activeProcessor.capacity) || (portsRequired > activeProcessor.ports);
 
   // Sync customizations when config changes (only if not manually overridden)
   useEffect(() => {
