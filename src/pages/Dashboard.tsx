@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Zap, Maximize, LayoutGrid, ArrowLeft, Printer, Settings, Share2, Home } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { syncService } from '../services/syncService';
+import { Zap, Maximize, LayoutGrid, ArrowLeft, Printer, Settings } from 'lucide-react';
 
 const SCENES = [
   { id: 'indoor', name: 'Indoor LED Screen', type: 'module' },
@@ -116,16 +114,6 @@ const Dashboard: React.FC = () => {
   const [activeProcessor, setActiveProcessor] = useState(CONTROL_SYSTEMS[0].models[5]); // Default VX1000
   const [activePower, setActivePower] = useState(POWER_SUPPLIES[0]);
   const [showResults, setShowResults] = useState(false);
-  const navigate = useNavigate();
-
-  const handleSyncToMobile = () => {
-    syncService.saveConfig(
-      { resW, resH, totalUnits, totalArea, powerMax, powerTyp, receivingCardQty },
-      'Global Client',
-      `${activeBrand.name} ${activeScene.name} ${activePitch}mm`
-    );
-    alert('Configuration Synced to Mobile Inventory! Check your Mobile App.');
-  };
 
   // Report Customization State
   const [customParams, setCustomParams] = useState<any[]>([]);
@@ -313,9 +301,6 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="hud-stats-inner" style={{ display: 'flex', gap: '12px' }}>
             <button className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => window.print()}><Printer size={16}/> Print Report</button>
-            <button className="btn-primary" onClick={handleSyncToMobile} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#10b981' }}>
-              <Share2 size={16}/> Sync to Mobile
-            </button>
             <button className="btn-primary" style={{ background: '#0f172a' }}>Finalize Quote</button>
           </div>
         </div>
@@ -432,7 +417,6 @@ const Dashboard: React.FC = () => {
           <span style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 'bold', letterSpacing: '0.025em' }}>CONFIGURATOR PRO</span>
         </div>
         <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-          <Home size={20} color="#94a3b8" style={{ cursor: 'pointer' }} onClick={() => navigate('/')} />
           <Settings size={20} color="#94a3b8" style={{ cursor: 'pointer' }} />
         </div>
       </header>

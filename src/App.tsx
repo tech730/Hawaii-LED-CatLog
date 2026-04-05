@@ -1,7 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
-import Portal from './pages/Portal';
-import MobileInventory from './pages/MobileInventory';
 import Step1_Environment from './pages/Step1_Environment';
 import Step2_Profile from './pages/Step2_Profile';
 import Step4_ScreenSize from './pages/Step4_ScreenSize';
@@ -11,9 +9,7 @@ function App() {
     <div className="app-container-full">
       <main>
         <Routes>
-          <Route path="/" element={<Portal />} />
-          <Route path="/configurator" element={<Dashboard />} />
-          <Route path="/inventory" element={<MobileInventory />} />
+          <Route path="/" element={<Dashboard />} />
           
           {/* Wizard Steps (if needed separate) */}
           <Route path="/step1" element={<Step1_Environment />} />
