@@ -314,7 +314,8 @@ const Dashboard: React.FC = () => {
         {/* Parameters Section */}
         <div style={{ marginBottom: '45px' }}>
           <div style={{ background: '#0f172a', color: '#fff', padding: '11px 19px', fontWeight: 'bold', fontSize: '0.9rem' }}>Technical Parameters</div>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
             <tbody>
               {/* Parameter Group 1: Product Details */}
               {customParams.filter(p => p.group === 'p1').map((p, idx) => (
@@ -353,12 +354,14 @@ const Dashboard: React.FC = () => {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
 
         {/* Materials Section */}
         <div style={{ marginBottom: '45px' }}>
           <div style={{ background: '#0f172a', color: '#fff', padding: '11px 19px', fontWeight: 'bold', fontSize: '0.9rem' }}>Materials BOM</div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e2e8f0' }}>
+          <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e2e8f0', minWidth: '600px' }}>
             <thead>
               <tr style={{ background: '#f8fafc', color: '#475569', fontSize: '0.85rem', textAlign: 'left' }}>
                 <th style={{ padding: '11px 19px', borderBottom: '1px solid #e2e8f0' }}>Product Type</th>
@@ -378,6 +381,7 @@ const Dashboard: React.FC = () => {
               ))}
             </tbody>
           </table>
+         </div>
         </div>
 
         {/* Wall Simulator inclusion for Print/Results */}
@@ -410,11 +414,11 @@ const Dashboard: React.FC = () => {
     <div style={{ background: '#f1f5f9', minHeight: '100vh' }}>
       
       {/* Main App Header */}
-      <header style={{ background: '#0f172a', padding: '16px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <header className="header-mobile" style={{ background: '#0f172a', padding: '16px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+        <div className="header-mobile" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <img src="/images/LOGO.png" alt="Hawaii LED Logo" style={{ height: '40px', width: 'auto' }} />
-          <div style={{ height: '24px', width: '1px', background: 'rgba(255,255,255,0.2)' }} />
-          <span style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 'bold', letterSpacing: '0.025em' }}>CONFIGURATOR PRO</span>
+          <div className="no-print" style={{ height: '24px', width: '1px', background: 'rgba(255,255,255,0.2)' }} />
+          <span style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 'bold', letterSpacing: '0.025em', textAlign: 'center' }}>CONFIGURATOR PRO</span>
         </div>
         <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
           <Settings size={20} color="#94a3b8" style={{ cursor: 'pointer' }} />
@@ -573,7 +577,7 @@ const Dashboard: React.FC = () => {
           </div>
           
           {/* Brand Switcher */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', marginBottom: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '4px', marginBottom: '8px' }}>
             {CONTROL_SYSTEMS.map(brand => (
               <button key={brand.id} onClick={() => { setActiveControlBrand(brand); setActiveProcessor(brand.models[0]); }} style={{
                 padding: '4px',
