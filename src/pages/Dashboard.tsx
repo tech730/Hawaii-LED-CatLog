@@ -304,14 +304,14 @@ const Dashboard: React.FC = () => {
   if (showResults) {
     return (
       <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto', background: '#fff', minHeight: '100vh' }}>
-        <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', paddingBottom: '20px', borderBottom: '1px solid #e2e8f0' }}>
+        <div className="no-print results-header-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', paddingBottom: '20px', borderBottom: '1px solid #e2e8f0' }}>
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             <button onClick={() => setShowResults(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
               <ArrowLeft size={24} />
             </button>
             <h1 style={{ fontSize: '1.8rem', color: '#0f172a' }}>System Configuration Results</h1>
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="hud-stats-inner" style={{ display: 'flex', gap: '12px' }}>
             <button className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => window.print()}><Printer size={16}/> Print Report</button>
             <button className="btn-primary" onClick={handleSyncToMobile} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#10b981' }}>
               <Share2 size={16}/> Sync to Mobile
@@ -437,15 +437,15 @@ const Dashboard: React.FC = () => {
         </div>
       </header>
 
-      <div style={{ padding: '40px 20px', maxWidth: '1600px', margin: '0 auto' }}>
+      <div className="mobile-p-20" style={{ padding: '40px 20px', maxWidth: '1600px', margin: '0 auto' }}>
         
         {/* HUD / Data Summary Bar */}
-        <div className="glass-card" style={{ padding: '20px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', borderLeft: '4px solid #0f172a', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div className="glass-card hud-stats-bar" style={{ padding: '20px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', borderLeft: '4px solid #0f172a', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
         <div>
           <h2 style={{ fontSize: '1.4rem' }}>{activeBrand.name} Configurator</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{activeScene.name} | P{activePitch} | {brightnessRange} nits</p>
         </div>
-        <div style={{ display: 'flex', gap: '30px', textAlign: 'right', alignItems: 'center' }}>
+        <div className="hud-stats-inner" style={{ display: 'flex', gap: '30px', textAlign: 'right', alignItems: 'center' }}>
           <div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}><Maximize size={12} style={{marginRight:'4px'}}/>RESOLUTION</div>
             <div style={{ fontWeight: '700', fontSize: '1.2rem', color: 'var(--primary)' }}>{resW} x {resH}</div>
@@ -474,7 +474,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Main 5-Panel Layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '15px', marginBottom: '24px' }}>
+      <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '15px', marginBottom: '24px' }}>
         
         {/* Panel 1: Select Scene */}
         <div className="glass-card" style={{ padding: '15px' }}>

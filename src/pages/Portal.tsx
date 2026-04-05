@@ -24,7 +24,7 @@ const Portal: React.FC = () => {
         <p style={{ color: '#94a3b8', fontSize: '1.2rem', marginTop: '10px' }}>Professional LED Ecosystem & Control</p>
       </div>
 
-      <div style={{ 
+      <div className="portal-card-grid" style={{ 
         display: 'grid', 
         gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
         gap: '30px', 
