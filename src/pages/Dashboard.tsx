@@ -212,6 +212,10 @@ const Dashboard: React.FC = () => {
     powerSupplyLabel = 'Main Power Cable';
     powerSupplyModel = '16A Power Line';
     powerSupplySpec = '1 Cable per 16 Cabinets';
+  } else if (isGobCabinet) {
+    powerSupplyQty = totalUnits;
+    powerSupplyModel = activePower.name;
+    powerSupplySpec = 'AC100~240V (50/60Hz)';
   } else {
     // totalUnits = number of 320x160 modules
     powerSupplyQty = isOutdoor ? Math.ceil(totalUnits / 8) : Math.ceil(totalUnits / 10);
@@ -227,7 +231,7 @@ const Dashboard: React.FC = () => {
 
   // Receiving Card logic (80% Safety Capacity)
   const receivingCardSafetyFactor = 0.8;
-  const receivingCardQty = isRental ? totalUnits : Math.ceil(totalPixels / (currentCard.capacity * receivingCardSafetyFactor));
+  const receivingCardQty = (isRental || isGobCabinet) ? totalUnits : Math.ceil(totalPixels / (currentCard.capacity * receivingCardSafetyFactor));
   const getDefaultParams = () => [
     { id: '1', group: 'p1', category: 'Technology / Scene', label: 'Scene', value: activeScene.name, unit: '-' },
     { id: '2', group: 'p1', category: 'Pixel Pitch', label: 'Pitch', value: `P${activePitch}`, unit: 'mm' },
@@ -245,9 +249,12 @@ const Dashboard: React.FC = () => {
   const panelSpec = isRental ? '500x500mm' : (isGobCabinet ? '600x337.5mm' : '320x160mm');
   const panelTypeStr = isRental ? 'Rental' : (isGobCabinet ? 'GOB Cabinet' : (isOutdoor ? 'Outdoor' : 'Indoor'));
 
+  const receivingCardModelStr = isGobCabinet ? 'Novastar' : currentCard.model;
+  const receivingCardSpecStr = isGobCabinet ? '1 per Cabinet' : `${currentCard.spec} (Load limit: 80%)`;
+
   const getDefaultBOM = () => [
     { id: 'b1', item: 'LED Module', model: `${activeBrand.name} P${activePitch} ${panelTypeStr}`, qty: totalUnits, spec: `${panelSpec} Panel` },
-    { id: 'b2', item: 'Receiving Card', model: currentCard.model, qty: receivingCardQty, spec: `${currentCard.spec} (Load limit: 80%)` },
+    { id: 'b2', item: 'Receiving Card', model: receivingCardModelStr, qty: receivingCardQty, spec: receivingCardSpecStr },
     { id: 'b3', item: 'Controller', model: `${activeControlBrand.name} ${activeProcessor.name}`, qty: 1, spec: `${activeProcessor.ports} Ports / ${activeProcessor.capacity.toLocaleString()} Pixels` },
     { id: 'b4', item: powerSupplyLabel, model: powerSupplyModel, qty: powerSupplyQty, spec: powerSupplySpec },
     { id: 'b5', item: 'Total Weight', model: 'Calculated Structural Load', qty: 1, spec: `~ ${totalWeight} kg` },
