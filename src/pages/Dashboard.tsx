@@ -6,7 +6,8 @@ const SCENES = [
   { id: 'outdoor', name: 'Outdoor LED Screen', type: 'module' },
   { id: 'rental', name: 'Rental Cabinet', type: 'cabinet' },
   { id: 'cob', name: 'COB (Indoor)', type: 'module' },
-  { id: 'gob', name: 'GOB (Indoor)', type: 'module' }
+  { id: 'gob', name: 'GOB (Indoor)', type: 'module' },
+  { id: 'gob_cabinet', name: 'GOB Cabinet Indoor', type: 'cabinet' }
 ];
 
 const BRANDS = [
@@ -21,7 +22,8 @@ const PITCH_SETS = {
   outdoor: ['2.5', '3.0', '4.0', '5.9', '6.0', '6.6', '8.0', '10.0'],
   rental: ['1.9', '2.6', '3.9'],
   cob: ['1.2', '1.5', '1.86', '2.0', '2.5', '3.0', '4.0'],
-  gob: ['1.2', '1.5', '1.86', '2.0', '2.5', '3.0', '4.0']
+  gob: ['1.2', '1.5', '1.86', '2.0', '2.5', '3.0', '4.0'],
+  gob_cabinet: ['1.25', '1.53']
 };
 
 const CONTROL_SYSTEMS = [
@@ -165,8 +167,17 @@ const Dashboard: React.FC = () => {
 
   // Physical specs
   const isRental = activeSceneId === 'rental';
-  const unitW = isRental ? 0.5 : 0.32; // 500mm vs 320mm module
-  const unitH = isRental ? 0.5 : 0.16; // 500mm vs 160mm module
+  const isGobCabinet = activeSceneId === 'gob_cabinet';
+  
+  let unitW = 0.32;
+  let unitH = 0.16;
+  if (isRental) {
+    unitW = 0.5;
+    unitH = 0.5;
+  } else if (isGobCabinet) {
+    unitW = 0.6; // 600mm
+    unitH = 0.3375; // 337.5mm
+  }
   
   const totalWidth = (widthCols * unitW).toFixed(2);
   const totalHeight = (heightRows * unitH).toFixed(2);
@@ -181,8 +192,8 @@ const Dashboard: React.FC = () => {
     const weightPerSqm = 25; // User specified 25sqm weight (likely means 25kg/sqm)
     totalWeight = (parseFloat(totalArea) * weightPerSqm).toFixed(1);
   }
-  const maxPowerPerSqm = isOutdoor ? 800 : 600;
-  const typPowerPerSqm = isOutdoor ? 260 : 200;
+  const maxPowerPerSqm = isGobCabinet ? 325 : (isOutdoor ? 800 : 600);
+  const typPowerPerSqm = isGobCabinet ? 160 : (isOutdoor ? 260 : 200);
   const powerMax = (parseFloat(totalArea) * maxPowerPerSqm).toFixed(0);
   const powerTyp = (parseFloat(totalArea) * typPowerPerSqm).toFixed(0);
   const ampsMax = (Number(powerMax) / 230).toFixed(1);
@@ -231,8 +242,11 @@ const Dashboard: React.FC = () => {
     { id: '11', group: 'p2', category: 'Heat', label: 'Heat Output', value: `${heatTyp} / ${heatMax}`, unit: 'BTU/h' },
   ];
 
+  const panelSpec = isRental ? '500x500mm' : (isGobCabinet ? '600x337.5mm' : '320x160mm');
+  const panelTypeStr = isRental ? 'Rental' : (isGobCabinet ? 'GOB Cabinet' : (isOutdoor ? 'Outdoor' : 'Indoor'));
+
   const getDefaultBOM = () => [
-    { id: 'b1', item: 'LED Module', model: `${activeBrand.name} P${activePitch} ${isRental ? 'Rental' : (isOutdoor ? 'Outdoor' : 'Indoor')}`, qty: totalUnits, spec: `${isRental ? '500x500mm' : '320x160mm'} Panel` },
+    { id: 'b1', item: 'LED Module', model: `${activeBrand.name} P${activePitch} ${panelTypeStr}`, qty: totalUnits, spec: `${panelSpec} Panel` },
     { id: 'b2', item: 'Receiving Card', model: currentCard.model, qty: receivingCardQty, spec: `${currentCard.spec} (Load limit: 80%)` },
     { id: 'b3', item: 'Controller', model: `${activeControlBrand.name} ${activeProcessor.name}`, qty: 1, spec: `${activeProcessor.ports} Ports / ${activeProcessor.capacity.toLocaleString()} Pixels` },
     { id: 'b4', item: powerSupplyLabel, model: powerSupplyModel, qty: powerSupplyQty, spec: powerSupplySpec },
