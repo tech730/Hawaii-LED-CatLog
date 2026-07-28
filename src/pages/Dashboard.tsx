@@ -685,34 +685,25 @@ const Dashboard: React.FC = () => {
                 alignItems: 'center'
               }}>
                 <span>{m.name}</span>
-                <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>{m.ports}P</span>
               </button>
             ))}
           </div>
-        {/* Panel 4.5: Receiving Card Selection */}
-        <div className="glass-card" style={{ padding: '15px' }}>
-          <h3 style={{ fontSize: '1rem', marginBottom: '12px', color: 'var(--primary)', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>4.5: Receiving Card Model</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '180px', overflowY: 'auto' }}>
-            {RECEIVING_CARDS.map(rc => (
-              <button key={rc.id} onClick={() => setActiveCard(rc)} style={{
-                padding: '6px 10px',
-                textAlign: 'left',
-                background: activeCard.id === rc.id ? '#eff6ff' : 'transparent',
-                border: `1px solid ${activeCard.id === rc.id ? '#3b82f6' : '#e2e8f0'}`,
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
-                <div>
-                  <div style={{ fontWeight: activeCard.id === rc.id ? 'bold' : 'normal', color: activeCard.id === rc.id ? '#1e40af' : '#1e293b' }}>{rc.model}</div>
-                  <div style={{ fontSize: '0.65rem', color: '#64748b' }}>{rc.spec}</div>
-                </div>
-                <span style={{ fontSize: '0.7rem', color: '#2563eb', fontWeight: 'bold' }}>{rc.maxW}x{rc.maxH}</span>
-              </button>
-            ))}
+
+          {/* Receiving Card Model Selector */}
+          <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed #e2e8f0' }}>
+            <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#475569', display: 'block', marginBottom: '4px' }}>Receiver Card Model:</label>
+            <select
+              value={activeCard.id}
+              onChange={(e) => {
+                const found = RECEIVING_CARDS.find(rc => rc.id === e.target.value);
+                if (found) setActiveCard(found);
+              }}
+              style={{ width: '100%', padding: '6px 8px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff', color: '#0f172a', fontWeight: '600' }}
+            >
+              {RECEIVING_CARDS.map(rc => (
+                <option key={rc.id} value={rc.id}>{rc.model} ({rc.maxW}x{rc.maxH})</option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -885,11 +876,10 @@ const Dashboard: React.FC = () => {
             />
           </div>
         )}
-          </div>
-        </div>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default Dashboard;
