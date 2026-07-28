@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Zap, Maximize, LayoutGrid, ArrowLeft, Printer, Settings } from 'lucide-react';
+import { Zap, Maximize, LayoutGrid, ArrowLeft, Printer, Settings, FileText } from 'lucide-react';
+import { ScreenDrawingStudio } from '../components/ScreenDrawingStudio';
 
 const SCENES = [
   { id: 'indoor', name: 'Indoor LED Screen', type: 'module' },
@@ -117,6 +118,7 @@ const Dashboard: React.FC = () => {
   const [activeProcessor, setActiveProcessor] = useState(CONTROL_SYSTEMS[0].models[5]); // Default VX1000
   const [activePower, setActivePower] = useState(POWER_SUPPLIES[0]);
   const [showResults, setShowResults] = useState(false);
+  const [simulatorTab, setSimulatorTab] = useState<'visualizer' | 'drawing'>('visualizer');
 
   // Report Customization State
   const [customParams, setCustomParams] = useState<any[]>([]);
@@ -417,12 +419,37 @@ const Dashboard: React.FC = () => {
          </div>
         </div>
 
-        {/* Wall Simulator inclusion for Print/Results */}
+        {/* Wall Visualizer & CAD Technical Drawing Studio inclusion for Print/Results */}
         <div style={{ marginTop: '40px' }}>
           <div style={{ background: '#0f172a', color: '#fff', padding: '12px 20px', fontWeight: 'bold' }}>Configuration Visual</div>
-          <div style={{ background: '#f8fafc', padding: '60px 20px', border: '1px solid #e2e8f0', borderTop: 'none', overflow: 'hidden' }}>
+          <div style={{ background: '#f8fafc', padding: '40px 20px', border: '1px solid #e2e8f0', borderTop: 'none', overflow: 'hidden' }}>
             {SimulatorVisual}
           </div>
+        </div>
+
+        {/* Technical Drawing Blueprint & PDF Studio */}
+        <div className="no-print" style={{ marginTop: '30px' }}>
+          <ScreenDrawingStudio
+            brandName={activeBrand.name}
+            sceneName={activeScene.name}
+            pitch={activePitch}
+            widthCols={widthCols}
+            heightRows={heightRows}
+            unitW={unitW}
+            unitH={unitH}
+            totalWidthM={totalWidth}
+            totalHeightM={totalHeight}
+            totalArea={totalArea}
+            resW={resW}
+            resH={resH}
+            totalUnits={totalUnits}
+            isRental={isRental}
+            processor={`${activeControlBrand.name} ${activeProcessor.name}`}
+            powerSupply={powerSupplyModel}
+            totalWeightKg={totalWeight}
+            powerMaxW={powerMax}
+            receivingCardQty={receivingCardQty}
+          />
         </div>
 
         {/* Official Catalog Download */}
@@ -488,8 +515,20 @@ const Dashboard: React.FC = () => {
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>WEIGHT</div>
             <div style={{ fontWeight: '700', fontSize: '1.2rem' }}>{totalWeight} kg</div>
           </div>
-          <button className="btn-outline" style={{ height: '40px', padding: '0 24px', borderRadius: '4px', fontWeight: 'bold', border: isOverCapacity ? '2px solid #ef4444' : '1px solid #e2e8f0' }} onClick={() => setShowResults(true)}>
+          <button 
+            className="btn-outline" 
+            style={{ height: '40px', padding: '0 18px', borderRadius: '4px', fontWeight: 'bold', border: isOverCapacity ? '2px solid #ef4444' : '1px solid #cbd5e1' }} 
+            onClick={() => setShowResults(true)}
+          >
             View Results
+          </button>
+          <button 
+            style={{ height: '40px', padding: '0 18px', borderRadius: '4px', fontWeight: 'bold', background: '#0284c7', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }} 
+            onClick={() => {
+              setSimulatorTab('drawing');
+            }}
+          >
+            <FileText size={16} /> CAD Drawing Studio
           </button>
         </div>
       </div>
@@ -755,14 +794,32 @@ const Dashboard: React.FC = () => {
 
       </div>
 
-      {/* Advanced Simulator */}
+      {/* Advanced Simulator & Technical CAD Drawing Studio */}
       <div className="glass-card" style={{ padding: '0', background: '#f8fafc', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', minHeight: '600px', border: '1px solid #e2e8f0' }}>
         
-        {/* Header toolbar for simulator */}
-        <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff' }}>
-          <div style={{ color: '#0f172a', fontSize: '1rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
-             <Settings size={18} color="#3b82f6"/> 
-             Interactive Wall Simulator
+        {/* Header toolbar for simulator & studio */}
+        <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', background: '#fff', gap: '12px' }}>
+          <div style={{ color: '#0f172a', fontSize: '1rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Settings size={18} color="#3b82f6"/> 
+              Interactive Wall Simulator
+            </div>
+
+            {/* Tab Selector */}
+            <div style={{ display: 'flex', gap: '4px', background: '#f1f5f9', padding: '4px', borderRadius: '6px' }}>
+              <button 
+                onClick={() => setSimulatorTab('visualizer')}
+                style={{ padding: '4px 12px', fontSize: '0.8rem', fontWeight: 'bold', border: 'none', borderRadius: '4px', cursor: 'pointer', background: simulatorTab === 'visualizer' ? '#0f172a' : 'transparent', color: simulatorTab === 'visualizer' ? '#fff' : '#64748b' }}
+              >
+                3D Visualizer
+              </button>
+              <button 
+                onClick={() => setSimulatorTab('drawing')}
+                style={{ padding: '4px 12px', fontSize: '0.8rem', fontWeight: 'bold', border: 'none', borderRadius: '4px', cursor: 'pointer', background: simulatorTab === 'drawing' ? '#0f172a' : 'transparent', color: simulatorTab === 'drawing' ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <FileText size={14} color="#38bdf8" /> CAD Drawing & PDF Studio
+              </button>
+            </div>
           </div>
           <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
             Unit Layout: {isRental ? '500x500mm Cabinet' : '320x160mm Module'}
@@ -770,11 +827,35 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Canvas Area */}
-        <div style={{ flex: 1, position: 'relative', padding: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          
-          {/* A large wrapper for the interactive elements */}
-          {SimulatorVisual}
-        </div>
+        {simulatorTab === 'visualizer' ? (
+          <div style={{ flex: 1, position: 'relative', padding: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {SimulatorVisual}
+          </div>
+        ) : (
+          <div style={{ padding: '20px' }}>
+            <ScreenDrawingStudio
+              brandName={activeBrand.name}
+              sceneName={activeScene.name}
+              pitch={activePitch}
+              widthCols={widthCols}
+              heightRows={heightRows}
+              unitW={unitW}
+              unitH={unitH}
+              totalWidthM={totalWidth}
+              totalHeightM={totalHeight}
+              totalArea={totalArea}
+              resW={resW}
+              resH={resH}
+              totalUnits={totalUnits}
+              isRental={isRental}
+              processor={`${activeControlBrand.name} ${activeProcessor.name}`}
+              powerSupply={powerSupplyModel}
+              totalWeightKg={totalWeight}
+              powerMaxW={powerMax}
+              receivingCardQty={receivingCardQty}
+            />
+          </div>
+        )}
       </div>
 
       </div>
