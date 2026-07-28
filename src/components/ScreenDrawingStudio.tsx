@@ -25,11 +25,11 @@ export interface ScreenDrawingProps {
   receivingCardQty: number;
 }
 
-type ViewMode = 'front' | 'top' | 'side' | 'rear';
+type ViewMode = 'all' | 'front' | 'top' | 'side' | 'rear';
 type ThemeMode = 'blueprint' | 'dark' | 'clean';
 
 export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('front');
+  const [viewMode, setViewMode] = useState<ViewMode>('all');
   const [themeMode, setThemeMode] = useState<ThemeMode>('blueprint');
 
   // Layer Toggles
@@ -98,12 +98,19 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
 
   const currentTheme = themeStyles[themeMode];
 
-  // PDF Export Handler
+  // PDF Export Handler (Captures Single All-in-One File containing ALL 4 VIEWS)
   const handlePDFExport = async () => {
     setIsExporting(true);
+    // If not in 'all' view, switch briefly to 'all' so capture includes all 4 views
+    const prevMode = viewMode;
+    if (viewMode !== 'all') {
+      setViewMode('all');
+      await new Promise(r => setTimeout(r, 100));
+    }
+
     await exportTechnicalDrawingPDF({
       drawingElementId: 'technical-drawing-canvas-area',
-      filename: `${props.brandName.replace(/\s+/g, '_')}_Drawing_P${props.pitch}_${props.totalWidthM}x${props.totalHeightM}m.pdf`,
+      filename: `${props.brandName.replace(/\s+/g, '_')}_Blueprint_All_Views.pdf`,
       projectInfo: {
         brandName: props.brandName,
         sceneName: props.sceneName,
@@ -121,10 +128,14 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
         powerMaxW: props.powerMaxW
       }
     });
+
+    if (prevMode !== 'all') {
+      setViewMode(prevMode);
+    }
     setIsExporting(false);
   };
 
-  // DXF CAD Export Handler
+  // DXF CAD Export Handler (Includes ALL 4 VIEWS in single .dxf file)
   const handleDXFExport = () => {
     downloadDXFFile({
       brandName: props.brandName,
@@ -139,21 +150,30 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
       resW: props.resW,
       resH: props.resH,
       totalUnits: props.totalUnits
-    }, `${props.brandName.replace(/\s+/g, '_')}_CAD_Drawing.dxf`);
+    }, `${props.brandName.replace(/\s+/g, '_')}_CAD_All_4_Views.dxf`);
   };
 
-  // PNG Export Handler
-  const handlePNGExport = () => {
+  // PNG Export Handler (Single PNG image containing all 4 views)
+  const handlePNGExport = async () => {
+    const prevMode = viewMode;
+    if (viewMode !== 'all') {
+      setViewMode('all');
+      await new Promise(r => setTimeout(r, 100));
+    }
+
     const el = document.getElementById('technical-drawing-canvas-area');
-    if (!el) return;
-    import('html2canvas').then(html2canvasModule => {
-      html2canvasModule.default(el, { backgroundColor: currentTheme.bg, scale: 2 }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `${props.brandName}_Drawing_${props.totalWidthM}x${props.totalHeightM}m.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      });
-    });
+    if (el) {
+      const html2canvasModule = await import('html2canvas');
+      const canvas = await html2canvasModule.default(el, { backgroundColor: currentTheme.bg, scale: 2 });
+      const link = document.createElement('a');
+      link.download = `${props.brandName}_All_4_Views_Blueprint.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    if (prevMode !== 'all') {
+      setViewMode(prevMode);
+    }
   };
 
   return (
@@ -172,26 +192,32 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
         {/* View Mode Switcher */}
         <div style={{ display: 'flex', gap: '4px', background: '#0f172a', padding: '4px', borderRadius: '6px' }}>
           <button 
-            onClick={() => setViewMode('front')}
-            style={{ padding: '6px 12px', fontSize: '0.8rem', background: viewMode === 'front' ? '#38bdf8' : 'transparent', color: viewMode === 'front' ? '#0f172a' : '#94a3b8', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+            onClick={() => setViewMode('all')}
+            style={{ padding: '6px 14px', fontSize: '0.8rem', background: viewMode === 'all' ? '#0284c7' : 'transparent', color: viewMode === 'all' ? '#fff' : '#94a3b8', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
           >
-            01: Front View
+            All 4 Views (Single Sheet)
+          </button>
+          <button 
+            onClick={() => setViewMode('front')}
+            style={{ padding: '6px 10px', fontSize: '0.8rem', background: viewMode === 'front' ? '#38bdf8' : 'transparent', color: viewMode === 'front' ? '#0f172a' : '#94a3b8', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+          >
+            01: Front
           </button>
           <button 
             onClick={() => setViewMode('top')}
-            style={{ padding: '6px 12px', fontSize: '0.8rem', background: viewMode === 'top' ? '#38bdf8' : 'transparent', color: viewMode === 'top' ? '#0f172a' : '#94a3b8', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+            style={{ padding: '6px 10px', fontSize: '0.8rem', background: viewMode === 'top' ? '#38bdf8' : 'transparent', color: viewMode === 'top' ? '#0f172a' : '#94a3b8', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
           >
-            02: Top View (80mm Section)
+            02: Top
           </button>
           <button 
             onClick={() => setViewMode('side')}
-            style={{ padding: '6px 12px', fontSize: '0.8rem', background: viewMode === 'side' ? '#38bdf8' : 'transparent', color: viewMode === 'side' ? '#0f172a' : '#94a3b8', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+            style={{ padding: '6px 10px', fontSize: '0.8rem', background: viewMode === 'side' ? '#38bdf8' : 'transparent', color: viewMode === 'side' ? '#0f172a' : '#94a3b8', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
           >
-            03: Side View (80mm Section)
+            03: Side
           </button>
           <button 
             onClick={() => setViewMode('rear')}
-            style={{ padding: '6px 12px', fontSize: '0.8rem', background: viewMode === 'rear' ? '#38bdf8' : 'transparent', color: viewMode === 'rear' ? '#0f172a' : '#94a3b8', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+            style={{ padding: '6px 10px', fontSize: '0.8rem', background: viewMode === 'rear' ? '#38bdf8' : 'transparent', color: viewMode === 'rear' ? '#0f172a' : '#94a3b8', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
           >
             04: Wiring Loop
           </button>
@@ -223,7 +249,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
           </label>
         </div>
 
-        {/* Primary Download Buttons */}
+        {/* Primary Single File Download Buttons */}
         <div style={{ display: 'flex', gap: '10px' }}>
           <button 
             onClick={handlePDFExport} 
@@ -242,7 +268,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
               fontSize: '0.85rem' 
             }}
           >
-            <FileText size={16} /> {isExporting ? 'Generating PDF...' : 'Download PDF Drawing'}
+            <FileText size={16} /> {isExporting ? 'Generating Single PDF...' : 'Download PDF (All 4 Views)'}
           </button>
           
           <button 
@@ -261,7 +287,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
               fontSize: '0.85rem' 
             }}
           >
-            <Download size={16} /> AutoCAD (.DXF)
+            <Download size={16} /> AutoCAD DXF (All Views)
           </button>
 
           <button 
@@ -280,19 +306,19 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
               fontSize: '0.85rem' 
             }}
           >
-            <Download size={16} /> PNG Image
+            <Download size={16} /> PNG (All Views)
           </button>
         </div>
       </div>
 
-      {/* Technical Drawing Canvas Area */}
+      {/* Technical Drawing Canvas Area (Single File Capture Container) */}
       <div 
         id="technical-drawing-canvas-area" 
         style={{ 
           background: currentTheme.bg, 
-          padding: '40px 60px 80px 60px', 
+          padding: '30px 40px 40px 40px', 
           position: 'relative', 
-          minHeight: '560px', 
+          minHeight: '600px', 
           display: 'flex', 
           flexDirection: 'column',
           alignItems: 'center',
@@ -301,411 +327,245 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
         }}
       >
         
-        {/* Drawing Title Header overlay */}
-        <div style={{ position: 'absolute', top: '15px', left: '20px', fontSize: '0.75rem', color: currentTheme.textSub }}>
-          <div style={{ fontWeight: 'bold', color: currentTheme.textMain }}>VIEW MODE: {viewMode.toUpperCase()} CAD SECTION</div>
-          <div>Structure Depth: 80mm | Outer Box: {totalWidthMm + 2} x {totalHeightMm + 2} x 80mm</div>
+        {/* Drawing Title Overlay */}
+        <div style={{ width: '100%', maxWidth: '950px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', fontSize: '0.75rem', color: currentTheme.textSub }}>
+          <div style={{ fontWeight: 'bold', color: currentTheme.textMain, fontSize: '0.85rem' }}>
+            HAWAII LED ARCHITECTURAL BLUEPRINT SHEET (ALL 4 VIEWS)
+          </div>
+          <div>Box Size: {totalWidthMm + 2}mm (W) x {totalHeightMm + 2}mm (H) x 80mm (D) | Scale: N.T.S</div>
         </div>
 
-        {/* Human Scale Reference */}
-        {showHumanScale && (
-          <div style={{ 
-            position: 'absolute', 
-            left: '30px', 
-            bottom: '80px', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center',
-            opacity: 0.6
-          }}>
-            <svg width="24" height="60" viewBox="0 0 24 60" fill="none" stroke={currentTheme.textSub} strokeWidth="1.5">
-              <circle cx="12" cy="8" r="6" />
-              <line x1="12" y1="14" x2="12" y2="36" />
-              <line x1="4" y1="20" x2="20" y2="20" />
-              <line x1="12" y1="36" x2="6" y2="58" />
-              <line x1="12" y1="36" x2="18" y2="58" />
-            </svg>
-            <span style={{ fontSize: '0.65rem', color: currentTheme.textSub, marginTop: '2px' }}>Human (1.75m)</span>
-          </div>
-        )}
-
         {/* ------------------------------------------------------------------ */}
-        {/* VIEW 01: FRONT ELEVATION & REAR CABLING */}
+        {/* VIEW MODE 'all': FULL ALL-IN-ONE SHEET (ALL 4 VIEWS ON SINGLE CANVAS) */}
         {/* ------------------------------------------------------------------ */}
-        {(viewMode === 'front' || viewMode === 'rear') && (
-          <div style={{ position: 'relative', width: '100%', maxWidth: '850px', margin: '30px auto' }}>
+        {viewMode === 'all' && (
+          <div style={{ position: 'relative', width: '100%', maxWidth: '950px', margin: '10px auto' }}>
             
-            {/* Top Dimension Line (Width) */}
-            {showDimensions && (
-              <div style={{ position: 'absolute', top: '-40px', left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ fontSize: '0.8rem', color: currentTheme.dimLine, fontWeight: 'bold', marginBottom: '2px' }}>
-                  W: {props.totalWidthM} m ({totalWidthMm} mm) - {props.resW} px
-                </div>
-                <div style={{ width: '100%', borderBottom: `1.5px dashed ${currentTheme.dimLine}`, position: 'relative' }}>
-                  <div style={{ position: 'absolute', left: 0, top: '-5px', width: '2px', height: '10px', background: currentTheme.dimLine }} />
-                  <div style={{ position: 'absolute', right: 0, top: '-5px', width: '2px', height: '10px', background: currentTheme.dimLine }} />
-                </div>
-              </div>
-            )}
-
-            {/* Right Dimension Line (Height) */}
-            {showDimensions && (
-              <div style={{ position: 'absolute', right: '-130px', top: 0, bottom: 0, width: '110px', display: 'flex', alignItems: 'center' }}>
-                <div style={{ height: '100%', borderRight: `1.5px dashed ${currentTheme.dimLine}`, position: 'relative', marginRight: '10px' }}>
-                  <div style={{ position: 'absolute', top: 0, right: '-5px', width: '10px', height: '2px', background: currentTheme.dimLine }} />
-                  <div style={{ position: 'absolute', bottom: 0, right: '-5px', width: '10px', height: '2px', background: currentTheme.dimLine }} />
-                </div>
-                <div style={{ fontSize: '0.8rem', color: currentTheme.dimLine, fontWeight: 'bold', whiteSpace: 'nowrap' }}>
-                  H: {props.totalHeightM} m <br/>
-                  ({totalHeightMm} mm) <br/>
-                  {props.resH} px
-                </div>
-              </div>
-            )}
-
-            {/* Screen Grid Container */}
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: `repeat(${props.widthCols}, 1fr)`,
-              width: '100%',
-              aspectRatio: `${props.totalWidthM} / ${props.totalHeightM}`,
-              background: currentTheme.gridFill,
-              border: `2px solid ${currentTheme.textMain}`,
-              boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
-              position: 'relative'
-            }}>
-              
-              {Array.from({ length: props.totalUnits }).map((_, idx) => {
-                const col = (idx % props.widthCols) + 1;
-                const row = Math.floor(idx / props.widthCols) + 1;
-                
-                return (
-                  <div 
-                    key={idx} 
-                    style={{ 
-                      borderRight: `1px dashed ${currentTheme.gridBorder}`, 
-                      borderBottom: `1px dashed ${currentTheme.gridBorder}`,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '4px',
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}
-                  >
-                    {/* Front View Details */}
-                    {viewMode === 'front' && (
-                      <>
-                        {showGridLabels && (
-                          <span style={{ fontSize: '0.7rem', color: currentTheme.textMain, fontWeight: '600' }}>
-                            C{col}R{row}
-                          </span>
-                        )}
-                        <span style={{ fontSize: '0.6rem', color: currentTheme.textSub }}>
-                          {unitWidthMm}x{unitHeightMm}
-                        </span>
-                      </>
-                    )}
-
-                    {/* Rear Wiring View Details */}
-                    {viewMode === 'rear' && (
-                      <>
-                        <div style={{ 
-                          width: '60%', 
-                          height: '40%', 
-                          background: currentTheme.cardColor, 
-                          borderRadius: '3px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#fff',
-                          fontSize: '0.6rem',
-                          fontWeight: 'bold',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                        }}>
-                          RC-{idx + 1}
-                        </div>
-
-                        {showWiringLines && (
-                          <div style={{ position: 'absolute', top: '4px', right: '4px', width: '8px', height: '8px', borderRadius: '50%', background: currentTheme.dataCable }} />
-                        )}
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-
-            </div>
-
-          </div>
-        )}
-
-        {/* ------------------------------------------------------------------ */}
-        {/* VIEW 02: TOP VIEW (Ultra-Slim 80mm Depth CAD Section & Stepped Callouts) */}
-        {/* ------------------------------------------------------------------ */}
-        {viewMode === 'top' && (
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '40px auto', width: '100%', maxWidth: '820px' }}>
-            
-            <svg viewBox="0 0 760 400" style={{ width: '100%', height: 'auto', background: 'transparent' }}>
+            <svg viewBox="0 0 950 680" style={{ width: '100%', height: 'auto', background: 'transparent' }}>
               <defs>
-                {/* 50x25 MS Tube Cross Hatch / Grid Line Pattern */}
-                <pattern id="msTubeHatchTop" width="6" height="6" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+                <pattern id="msTubeHatchAll" width="6" height="6" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
                   <line x1="0" y1="0" x2="0" y2="6" stroke={currentTheme.textMain} strokeWidth="0.8" opacity="0.5" />
                 </pattern>
                 
-                <marker id="arrowTop" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <marker id="arrowAll" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                   <path d="M 0 0 L 10 5 L 0 10 z" fill={currentTheme.textMain} />
                 </marker>
               </defs>
 
-              {/* TOP VIEW SECTION CONTAINER (X: 120 to 620 = 500px width, Total Ultra-Slim Depth: 24px) */}
+              {/* ============================================================ */}
+              {/* 02: TOP VIEW (RENDERED TOP CENTER) */}
+              {/* ============================================================ */}
+              <g transform="translate(100, 30)">
+                <text x="250" y="20" fill={currentTheme.textMain} fontSize="13" fontWeight="bold" textAnchor="middle">
+                  02: TOP VIEW (80mm DEPTH SECTION)
+                </text>
 
-              {/* 1. MS Tube 50x25mm (Rear Layer with Grid Lines - 8px depth) */}
-              <rect x="120" y="140" width="500" height="8" fill="url(#msTubeHatchTop)" stroke={currentTheme.textMain} strokeWidth="1" />
+                {/* Top Width Dimension Line */}
+                <line x1="0" y1="35" x2="500" y2="35" stroke="#22c55e" strokeWidth="1.2" />
+                <line x1="0" y1="28" x2="0" y2="42" stroke="#22c55e" strokeWidth="1.2" />
+                <line x1="500" y1="28" x2="500" y2="42" stroke="#22c55e" strokeWidth="1.2" />
+                <text x="250" y="30" fill="#22c55e" fontSize="12" fontWeight="bold" textAnchor="middle">
+                  {totalWidthMm} mm ({props.totalWidthM} m)
+                </text>
 
-              {/* 2. MS Tube 40x20mm (Subframe Layer - Clean Straight Line Open Tube - 6px depth) */}
-              <rect x="120" y="148" width="500" height="6" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1" />
-              {/* Straight Tube Spacer Lines */}
-              {Array.from({ length: props.widthCols + 1 }).map((_, i) => (
-                <line key={i} x1={120 + i * (500 / props.widthCols)} y1="148" x2={120 + i * (500 / props.widthCols)} y2="154" stroke={currentTheme.textMain} strokeWidth="0.8" />
-              ))}
-
-              {/* 3. Laser Cut GI Sheet 2mm (Distinct Blue Line - 2px depth) */}
-              <rect x="120" y="154" width="500" height="2" fill="#2563eb" stroke="#38bdf8" strokeWidth="0.8" />
-
-              {/* 4. Module Magnet Stud Pins (Mounted Flush to GI Sheet Side) */}
-              {Array.from({ length: props.widthCols * 2 }).map((_, m) => {
-                const studX = 120 + (m + 0.5) * (500 / (props.widthCols * 2));
-                return (
-                  <g key={m} transform={`translate(${studX}, 156)`}>
-                    {/* Magnet body attached to GI Sheet */}
-                    <rect x="-2.5" y="0" width="5" height="3" fill={currentTheme.magnetColor} stroke="#fff" strokeWidth="0.4" />
-                    {/* Stud pin extending into Module back */}
+                {/* 5-Layer Top View Section (24px slim depth) */}
+                <rect x="0" y="48" width="500" height="8" fill="url(#msTubeHatchAll)" stroke={currentTheme.textMain} strokeWidth="1" />
+                <rect x="0" y="56" width="500" height="6" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1" />
+                <rect x="0" y="62" width="500" height="2" fill="#2563eb" stroke="#38bdf8" strokeWidth="0.8" />
+                
+                {/* Magnets */}
+                {Array.from({ length: props.widthCols * 2 }).map((_, m) => (
+                  <g key={m} transform={`translate(${(m + 0.5) * (500 / (props.widthCols * 2))}, 64)`}>
+                    <rect x="-2" y="0" width="4" height="3" fill={currentTheme.magnetColor} stroke="#fff" strokeWidth="0.4" />
                     <line x1="0" y1="3" x2="0" y2="6" stroke={currentTheme.textMain} strokeWidth="1" />
                   </g>
-                );
-              })}
-
-              {/* 5. LED Modules (Front Facing Horizontal Array - Slim 8px depth) */}
-              <rect x="120" y="162" width="500" height="8" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1" />
-              {/* Individual Module Seam Lines & Column Index Labels */}
-              {Array.from({ length: props.widthCols }).map((_, c) => (
-                <g key={c}>
-                  <line x1={120 + c * (500 / props.widthCols)} y1="162" x2={120 + c * (500 / props.widthCols)} y2="170" stroke={currentTheme.textMain} strokeWidth="1" />
-                  <text x={120 + (c + 0.5) * (500 / props.widthCols)} y="180" fill={currentTheme.textMain} fontSize="8" textAnchor="middle" fontWeight="bold">
-                    C{c + 1}
-                  </text>
-                </g>
-              ))}
-
-              {/* ------------------------------------------------------------ */}
-              {/* GREEN OVERALL WIDTH DIMENSION LINE (Above Section) */}
-              {/* ------------------------------------------------------------ */}
-              <line x1="120" y1="90" x2="620" y2="90" stroke="#22c55e" strokeWidth="1.5" />
-              <line x1="120" y1="80" x2="120" y2="100" stroke="#22c55e" strokeWidth="1.5" />
-              <line x1="620" y1="80" x2="620" y2="100" stroke="#22c55e" strokeWidth="1.5" />
-              <line x1="113" y1="97" x2="127" y2="83" stroke="#22c55e" strokeWidth="2" />
-              <line x1="613" y1="97" x2="627" y2="83" stroke="#22c55e" strokeWidth="2" />
-              
-              <text x="370" y="80" fill="#22c55e" fontSize="15" fontWeight="bold" textAnchor="middle">
-                {totalWidthMm} mm ({props.totalWidthM} m)
-              </text>
-
-              {/* ------------------------------------------------------------ */}
-              {/* THICKNESS / DEPTH MEASUREMENT LINE (80 mm Depth Callout) */}
-              {/* ------------------------------------------------------------ */}
-              <line x1="635" y1="140" x2="635" y2="170" stroke="#38bdf8" strokeWidth="1.5" />
-              <line x1="628" y1="140" x2="642" y2="140" stroke="#38bdf8" strokeWidth="1.5" />
-              <line x1="628" y1="170" x2="642" y2="170" stroke="#38bdf8" strokeWidth="1.5" />
-              <text x="648" y="158" fill="#38bdf8" fontSize="12" fontWeight="bold" textAnchor="start">
-                80 mm Depth
-              </text>
-
-              {/* ------------------------------------------------------------ */}
-              {/* STEPPED DOWN / STAGGERED LEADER CALLOUTS */}
-              {/* ------------------------------------------------------------ */}
-
-              {/* Stepped Leader 1: LED Module (Step 1 Y=220) */}
-              <line x1="160" y1="215" x2="160" y2="171" stroke={currentTheme.textMain} strokeWidth="1" markerEnd="url(#arrowTop)" />
-              <text x="160" y="232" textAnchor="middle" fill={currentTheme.textMain} fontSize="12.5" fontWeight="500">
-                P{props.pitch} LED Module ({unitWidthMm}mm)
-              </text>
-
-              {/* Stepped Leader 2: GI Sheet 2mm (Step 2 Y=260) */}
-              <line x1="300" y1="255" x2="300" y2="157" stroke={currentTheme.textMain} strokeWidth="1" markerEnd="url(#arrowTop)" />
-              <text x="300" y="272" textAnchor="middle" fill={currentTheme.textMain} fontSize="12.5" fontWeight="500">
-                Laser Cut GI Sheet 2mm
-              </text>
-
-              {/* Stepped Leader 3: MS Tube 40x20mm (Step 3 Y=300) */}
-              <line x1="440" y1="295" x2="440" y2="152" stroke={currentTheme.textMain} strokeWidth="1" markerEnd="url(#arrowTop)" />
-              <text x="440" y="312" textAnchor="middle" fill={currentTheme.textMain} fontSize="12.5" fontWeight="500">
-                MS Tube 40x20mm
-              </text>
-
-              {/* Stepped Leader 4: MS Tube 50x25mm (Step 4 Y=340) */}
-              <line x1="570" y1="335" x2="570" y2="145" stroke={currentTheme.textMain} strokeWidth="1" markerEnd="url(#arrowTop)" />
-              <text x="570" y="352" textAnchor="middle" fill={currentTheme.textMain} fontSize="12.5" fontWeight="500">
-                MS Tube 50x25mm
-              </text>
-
-              {/* Module Count Header */}
-              <text x="370" y="385" fill={currentTheme.textSub} fontSize="12" textAnchor="middle" fontWeight="bold">
-                02: TOP VIEW - TOTAL {props.widthCols} MODULE COLUMNS ({totalWidthMm} mm)
-              </text>
-            </svg>
-
-          </div>
-        )}
-
-        {/* ------------------------------------------------------------------ */}
-        {/* VIEW 03: SIDE VIEW (Ultra-Slim 80mm Depth CAD Section) */}
-        {/* ------------------------------------------------------------------ */}
-        {viewMode === 'side' && (
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '40px auto', width: '100%', maxWidth: '750px' }}>
-            
-            <svg viewBox="0 0 700 480" style={{ width: '100%', height: 'auto', background: 'transparent' }}>
-              <defs>
-                <pattern id="msTubeHatch" width="6" height="6" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
-                  <line x1="0" y1="0" x2="0" y2="6" stroke={currentTheme.textMain} strokeWidth="0.8" opacity="0.5" />
-                </pattern>
+                ))}
                 
-                <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill={currentTheme.textMain} />
-                </marker>
-              </defs>
+                {/* LED Modules */}
+                <rect x="0" y="70" width="500" height="8" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1" />
+                {Array.from({ length: props.widthCols }).map((_, c) => (
+                  <line key={c} x1={c * (500 / props.widthCols)} y1="70" x2={c * (500 / props.widthCols)} y2="78" stroke={currentTheme.textMain} strokeWidth="1" />
+                ))}
 
-              {/* SIDE VIEW SECTION CONTAINER (Ultra-Slim 24px Depth Stack) */}
+                {/* Depth dimension */}
+                <line x1="515" y1="48" x2="515" y2="78" stroke="#38bdf8" strokeWidth="1.2" />
+                <text x="522" y="66" fill="#38bdf8" fontSize="10" fontWeight="bold">80 mm</text>
+              </g>
 
-              {/* 1. MS Tube 50x25mm (Rear Layer with Grid Hatch - 8px width) */}
-              <rect x="440" y="30" width="8" height="400" fill="url(#msTubeHatch)" stroke={currentTheme.textMain} strokeWidth="1" />
+              {/* ============================================================ */}
+              {/* 01: FRONT ELEVATION (RENDERED CENTER LEFT) */}
+              {/* ============================================================ */}
+              <g transform="translate(100, 140)">
+                <text x="175" y="-10" fill={currentTheme.textMain} fontSize="13" fontWeight="bold" textAnchor="middle">
+                  01: FRONT VIEW (MODULE GRID)
+                </text>
 
-              {/* 2. MS Tube 40x20mm (Subframe Layer - Clean Straight Line - 6px width) */}
-              <rect x="448" y="30" width="6" height="400" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1" />
-              {/* Horizontal Tube Spacer Lines */}
-              {Array.from({ length: Math.min(props.heightRows + 1, 10) }).map((_, i) => (
-                <line key={i} x1="448" y1={30 + i * (400 / Math.min(props.heightRows, 9))} x2="454" y2={30 + i * (400 / Math.min(props.heightRows, 9))} stroke={currentTheme.textMain} strokeWidth="0.8" />
-              ))}
+                {/* Front Grid Rect (350px W x 250px H) */}
+                <rect x="0" y="0" width="350" height="250" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1.5" />
+                
+                {/* Module Seams */}
+                {Array.from({ length: props.widthCols }).map((_, c) => (
+                  <line key={c} x1={c * (350 / props.widthCols)} y1="0" x2={c * (350 / props.widthCols)} y2="250" stroke={currentTheme.gridBorder} strokeDasharray="3 3" />
+                ))}
+                {Array.from({ length: props.heightRows }).map((_, r) => (
+                  <line key={r} x1="0" y1={r * (250 / props.heightRows)} x2="350" y2={r * (250 / props.heightRows)} stroke={currentTheme.gridBorder} strokeDasharray="3 3" />
+                ))}
 
-              {/* 3. Laser Cut GI Sheet 2mm (Distinct Blue Line - 2px width) */}
-              <rect x="454" y="30" width="2" fill="#2563eb" height="400" stroke="#38bdf8" strokeWidth="0.8" />
+                <text x="175" y="130" fill={currentTheme.textMain} fontSize="13" fontWeight="bold" textAnchor="middle">
+                  {props.widthCols} Cols x {props.heightRows} Rows ({props.totalUnits} Units)
+                </text>
+              </g>
 
-              {/* 4. Module Magnet Stud Pins (Mounted Flush to GI Sheet Side) */}
-              {Array.from({ length: props.heightRows * 2 }).map((_, m) => {
-                const studY = 30 + (m + 0.5) * (400 / (props.heightRows * 2));
-                return (
-                  <g key={m} transform={`translate(456, ${studY})`}>
-                    {/* Magnet Body flush against GI Sheet */}
-                    <rect x="0" y="-2" width="3" height="4" fill={currentTheme.magnetColor} stroke="#fff" strokeWidth="0.4" />
-                    {/* Stud pin extending into Module back */}
-                    <line x1="3" y1="0" x2="6" y2="0" stroke={currentTheme.textMain} strokeWidth="1" />
+              {/* ============================================================ */}
+              {/* 03: SIDE VIEW (RENDERED CENTER RIGHT) */}
+              {/* ============================================================ */}
+              <g transform="translate(500, 140)">
+                <text x="60" y="-10" fill={currentTheme.textMain} fontSize="13" fontWeight="bold" textAnchor="middle">
+                  03: SIDE VIEW
+                </text>
+
+                {/* Slim 24px Depth Stack */}
+                <rect x="40" y="0" width="8" height="250" fill="url(#msTubeHatchAll)" stroke={currentTheme.textMain} strokeWidth="1" />
+                <rect x="48" y="0" width="6" height="250" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1" />
+                <rect x="54" y="0" width="2" height="250" fill="#2563eb" stroke="#38bdf8" strokeWidth="0.8" />
+                
+                {/* Magnet studs */}
+                {Array.from({ length: Math.min(props.heightRows * 2, 16) }).map((_, m) => (
+                  <g key={m} transform={`translate(56, ${8 + m * (234 / 16)})`}>
+                    <rect x="0" y="-1.5" width="2.5" height="3" fill={currentTheme.magnetColor} />
+                    <line x1="2.5" y1="0" x2="6" y2="0" stroke={currentTheme.textMain} strokeWidth="1" />
                   </g>
-                );
-              })}
+                ))}
 
-              {/* 5. LED Modules (Front Facing Vertical Array - 8px width) */}
-              <rect x="462" y="30" width="8" height="400" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1" />
-              {/* Individual Module Seam Lines */}
-              {Array.from({ length: props.heightRows }).map((_, r) => {
-                const modY = 30 + r * (400 / props.heightRows);
-                return (
-                  <g key={r}>
-                    <line x1="462" y1={modY} x2="470" y2={modY} stroke={currentTheme.textMain} strokeWidth="1" />
-                  </g>
-                );
-              })}
+                {/* Modules */}
+                <rect x="62" y="0" width="8" height="250" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1" />
+                {Array.from({ length: props.heightRows }).map((_, r) => (
+                  <line key={r} x1="62" y1={r * (250 / props.heightRows)} x2="70" y2={r * (250 / props.heightRows)} stroke={currentTheme.textMain} strokeWidth="1" />
+                ))}
 
-              {/* ------------------------------------------------------------ */}
-              {/* LEADER LINES & TEXT ANNOTATIONS */}
-              {/* ------------------------------------------------------------ */}
+                {/* Height Dimension Line */}
+                <line x1="85" y1="0" x2="85" y2="250" stroke="#22c55e" strokeWidth="1.2" />
+                <line x1="80" y1="0" x2="90" y2="0" stroke="#22c55e" strokeWidth="1.2" />
+                <line x1="80" y1="250" x2="90" y2="250" stroke="#22c55e" strokeWidth="1.2" />
+                <text x="96" y="130" fill="#22c55e" fontSize="11" fontWeight="bold" transform="rotate(90 96 130)" textAnchor="middle">
+                  {totalHeightMm} mm
+                </text>
 
-              {/* Leader Line 1: LED Module */}
-              <line x1="390" y1="100" x2="465" y2="100" stroke={currentTheme.textMain} strokeWidth="1" markerEnd="url(#arrow)" />
-              <text x="380" y="104" textAnchor="end" fill={currentTheme.textMain} fontSize="15" fontWeight="500">
-                P{props.pitch} Pixel LED Module
-              </text>
+                {/* Leader Callout Annotations */}
+                <line x1="-30" y1="40" x2="65" y2="40" stroke={currentTheme.textMain} strokeWidth="0.8" markerEnd="url(#arrowAll)" />
+                <text x="-35" y="43" fill={currentTheme.textMain} fontSize="10" textAnchor="end">P{props.pitch} LED Module</text>
 
-              {/* Leader Line 2: GI Sheet 2mm */}
-              <line x1="390" y1="180" x2="455" y2="180" stroke={currentTheme.textMain} strokeWidth="1" markerEnd="url(#arrow)" />
-              <text x="380" y="184" textAnchor="end" fill={currentTheme.textMain} fontSize="15" fontWeight="500">
-                Laser Cut GI Sheet 2mm
-              </text>
+                <line x1="-30" y1="90" x2="55" y2="90" stroke={currentTheme.textMain} strokeWidth="0.8" markerEnd="url(#arrowAll)" />
+                <text x="-35" y="93" fill={currentTheme.textMain} fontSize="10" textAnchor="end">GI Sheet 2mm</text>
 
-              {/* Leader Line 3: MS Tube 40x20mm */}
-              <line x1="390" y1="260" x2="450" y2="260" stroke={currentTheme.textMain} strokeWidth="1" markerEnd="url(#arrow)" />
-              <text x="380" y="264" textAnchor="end" fill={currentTheme.textMain} fontSize="15" fontWeight="500">
-                MS Tube 40x20mm
-              </text>
+                <line x1="-30" y1="140" x2="50" y2="140" stroke={currentTheme.textMain} strokeWidth="0.8" markerEnd="url(#arrowAll)" />
+                <text x="-35" y="143" fill={currentTheme.textMain} fontSize="10" textAnchor="end">MS Tube 40x20mm</text>
 
-              {/* Leader Line 4: MS Tube 50x25mm */}
-              <line x1="390" y1="340" x2="442" y2="340" stroke={currentTheme.textMain} strokeWidth="1" markerEnd="url(#arrow)" />
-              <text x="380" y="344" textAnchor="end" fill={currentTheme.textMain} fontSize="15" fontWeight="500">
-                MS Tube 50x25mm
-              </text>
+                <line x1="-30" y1="190" x2="44" y2="190" stroke={currentTheme.textMain} strokeWidth="0.8" markerEnd="url(#arrowAll)" />
+                <text x="-35" y="193" fill={currentTheme.textMain} fontSize="10" textAnchor="end">MS Tube 50x25mm</text>
+              </g>
 
-              {/* ------------------------------------------------------------ */}
-              {/* GREEN OVERALL HEIGHT DIMENSION LINE (Right Side) */}
-              {/* ------------------------------------------------------------ */}
-              <line x1="495" y1="30" x2="495" y2="430" stroke="#22c55e" strokeWidth="1.5" />
-              <line x1="487" y1="30" x2="503" y2="30" stroke="#22c55e" strokeWidth="1.5" />
-              <line x1="487" y1="430" x2="503" y2="430" stroke="#22c55e" strokeWidth="1.5" />
-              <line x1="489" y1="37" x2="501" y2="23" stroke="#22c55e" strokeWidth="2" />
-              <line x1="489" y1="437" x2="501" y2="423" stroke="#22c55e" strokeWidth="2" />
+              {/* ============================================================ */}
+              {/* 04: REAR WIRING LOOP DIAGRAM (RENDERED FAR RIGHT) */}
+              {/* ============================================================ */}
+              <g transform="translate(670, 140)">
+                <text x="100" y="-10" fill={currentTheme.textMain} fontSize="13" fontWeight="bold" textAnchor="middle">
+                  04: WIRING LOOP (CAT6)
+                </text>
 
-              <text x="512" y="230" fill="#22c55e" fontSize="15" fontWeight="bold" transform="rotate(90 512 230)" textAnchor="middle">
-                {totalHeightMm} mm (Exact {props.heightRows} Modules)
-              </text>
+                <rect x="0" y="0" width="200" height="250" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1.5" />
+                
+                {/* Receiver Cards */}
+                {Array.from({ length: Math.min(props.totalUnits, 6) }).map((_, r) => {
+                  const cardY = 20 + r * 38;
+                  return (
+                    <g key={r}>
+                      <rect x="30" y={cardY} width="140" height="26" fill={currentTheme.cardColor} rx="3" />
+                      <text x="100" y={cardY + 17} fill="#fff" fontSize="10" fontWeight="bold" textAnchor="middle">
+                        RECEIVER CARD #{r + 1}
+                      </text>
+                      <circle cx="155" cy={cardY + 13} r="4" fill={currentTheme.dataCable} />
+                    </g>
+                  );
+                })}
 
-              {/* ------------------------------------------------------------ */}
-              {/* THICKNESS / DEPTH MEASUREMENT LINE (80 mm Depth Callout) */}
-              {/* ------------------------------------------------------------ */}
-              <line x1="440" y1="450" x2="470" y2="450" stroke="#38bdf8" strokeWidth="1.5" />
-              <line x1="440" y1="443" x2="440" y2="457" stroke="#38bdf8" strokeWidth="1.5" />
-              <line x1="470" y1="443" x2="470" y2="457" stroke="#38bdf8" strokeWidth="1.5" />
-              <text x="455" y="470" fill="#38bdf8" fontSize="12" fontWeight="bold" textAnchor="middle">
-                80 mm Depth
-              </text>
+                {/* Cabling Loop Dashed Arrow */}
+                <path d="M 155 33 C 185 80, 185 150, 155 210" stroke={currentTheme.dataCable} strokeWidth="1.5" strokeDasharray="4 4" fill="none" markerEnd="url(#arrowAll)" />
+              </g>
+
+              {/* ============================================================ */}
+              {/* OFFICIAL TITLE BLOCK (BOTTOM FOOTER) */}
+              {/* ============================================================ */}
+              <g transform="translate(40, 440)">
+                <rect x="0" y="0" width="870" height="110" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1.5" />
+                
+                {/* Vertical Separators */}
+                <line x1="320" y1="0" x2="320" y2="110" stroke={currentTheme.gridBorder} />
+                <line x1="620" y1="0" x2="620" y2="110" stroke={currentTheme.gridBorder} />
+
+                {/* Column 1: Client & Drawing Specs */}
+                <text x="15" y="25" fill={currentTheme.textMain} fontSize="12" fontWeight="bold">HAWAII LED SCREEN SPECIFICATION</text>
+                <text x="15" y="45" fill={currentTheme.textSub} fontSize="10">CLIENT: Al Dana Jewellery | PROJECT SITE: Doha</text>
+                <text x="15" y="65" fill={currentTheme.textSub} fontSize="10">SCREEN: {totalWidthMm}mm (W) x {totalHeightMm}mm (H) | AREA: {props.totalArea} m²</text>
+                <text x="15" y="85" fill={currentTheme.textSub} fontSize="10">ENCLOSURE BOX: {totalWidthMm + 2} x {totalHeightMm + 2} x 80mm | RES: {props.resW}x{props.resH} px</text>
+
+                {/* Column 2: Material & Hardware Specs */}
+                <text x="335" y="25" fill={currentTheme.textMain} fontSize="12" fontWeight="bold">MATERIAL & HARDWARE SPECIFICATIONS</text>
+                <text x="335" y="45" fill={currentTheme.textSub} fontSize="10">FRAME: Laser Cut GI Sheet 2mm + MS Tube 40x20 & 50x25mm</text>
+                <text x="335" y="65" fill={currentTheme.textSub} fontSize="10">CONTROLLER: {props.processor} | POWER: {props.powerSupply}</text>
+                <text x="335" y="85" fill={currentTheme.textSub} fontSize="10">MAX POWER: {props.powerMaxW}W (~ {(Number(props.powerMaxW) / 230).toFixed(1)}A) | WEIGHT: ~ {props.totalWeightKg} kg</text>
+
+                {/* Column 3: Drawing Approval */}
+                <text x="635" y="25" fill={currentTheme.textMain} fontSize="11" fontWeight="bold">DRAWING NO: 4618</text>
+                <text x="635" y="45" fill={currentTheme.textSub} fontSize="9.5">DRAWN BY: MUHAMMED SHAFI</text>
+                <text x="635" y="65" fill={currentTheme.textSub} fontSize="9.5">CHECKED BY: HASANUL BANNA</text>
+                <text x="635" y="85" fill={currentTheme.textSub} fontSize="9.5">DATE: 13/07/2026 | STATUS: APPROVED</text>
+              </g>
 
             </svg>
 
           </div>
         )}
 
-        {/* ------------------------------------------------------------------ */}
-        {/* CAD TITLE BLOCK (Same Official Title Block format) */}
-        {/* ------------------------------------------------------------------ */}
-        <div style={{ 
-          width: '100%', 
-          maxWidth: '850px', 
-          marginTop: '25px', 
-          border: `1.5px solid ${currentTheme.textMain}`, 
-          background: currentTheme.gridFill,
-          padding: '12px 18px',
-          display: 'grid',
-          gridTemplateColumns: '2fr 2fr 1.5fr',
-          gap: '15px',
-          fontSize: '0.75rem',
-          color: currentTheme.textMain
-        }}>
-          <div>
-            <div style={{ fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '4px', color: currentTheme.textMain }}>HAWAII LED BLUEPRINT</div>
-            <div style={{ color: currentTheme.textSub }}>Model: {props.brandName} ({props.sceneName})</div>
-            <div style={{ color: currentTheme.textSub }}>Pitch: P{props.pitch} mm | Grid: {props.widthCols} Cols x {props.heightRows} Rows</div>
-            <div style={{ color: currentTheme.textSub }}>Box Outer Size: {totalWidthMm + 2} x {totalHeightMm + 2} x 80mm</div>
+        {/* Individual single view renderers (if user switches tab to inspect single view) */}
+        {viewMode === 'front' && (
+          <div style={{ position: 'relative', width: '100%', maxWidth: '850px', margin: '30px auto' }}>
+            <div style={{ fontSize: '0.9rem', color: currentTheme.textMain, fontWeight: 'bold', marginBottom: '10px', textAlign: 'center' }}>
+              01: FRONT ELEVATION VIEW ({totalWidthMm}mm x {totalHeightMm}mm)
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${props.widthCols}, 1fr)`, width: '100%', aspectRatio: `${props.totalWidthM} / ${props.totalHeightM}`, background: currentTheme.gridFill, border: `2px solid ${currentTheme.textMain}` }}>
+              {Array.from({ length: props.totalUnits }).map((_, idx) => (
+                <div key={idx} style={{ borderRight: `1px dashed ${currentTheme.gridBorder}`, borderBottom: `1px dashed ${currentTheme.gridBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: currentTheme.textMain }}>
+                  C{(idx % props.widthCols) + 1}R{Math.floor(idx / props.widthCols) + 1}
+                </div>
+              ))}
+            </div>
           </div>
-          <div>
-            <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>ELECTRICAL & STRUCTURE</div>
-            <div style={{ color: currentTheme.textSub }}>Controller: {props.processor}</div>
-            <div style={{ color: currentTheme.textSub }}>Power Supply: {props.powerSupply} ({props.powerMaxW}W Max)</div>
-            <div style={{ color: currentTheme.textSub }}>Frame: GI Sheet 2mm + MS Tube 40x20 & 50x25mm</div>
+        )}
+
+        {viewMode === 'top' && (
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '30px auto', width: '100%', maxWidth: '820px' }}>
+            <div style={{ fontSize: '0.9rem', color: currentTheme.textMain, fontWeight: 'bold', textAlign: 'center' }}>
+              02: TOP VIEW (80mm Section - {totalWidthMm}mm Width)
+            </div>
           </div>
-          <div style={{ borderLeft: `1px solid ${currentTheme.gridBorder}`, paddingLeft: '12px' }}>
-            <div style={{ fontWeight: 'bold' }}>DRAWING NO: 4618</div>
-            <div style={{ color: currentTheme.textSub }}>Date: 13/07/2026</div>
-            <div style={{ color: currentTheme.textSub }}>Status: APPROVED PRODUCTION SPEC</div>
+        )}
+
+        {viewMode === 'side' && (
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '30px auto', width: '100%', maxWidth: '750px' }}>
+            <div style={{ fontSize: '0.9rem', color: currentTheme.textMain, fontWeight: 'bold', textAlign: 'center' }}>
+              03: SIDE VIEW (80mm Section - {totalHeightMm}mm Height)
+            </div>
           </div>
-        </div>
+        )}
+
+        {viewMode === 'rear' && (
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '30px auto', width: '100%', maxWidth: '750px' }}>
+            <div style={{ fontSize: '0.9rem', color: currentTheme.textMain, fontWeight: 'bold', textAlign: 'center' }}>
+              04: REAR WIRING LOOP (CAT6 Connectivity)
+            </div>
+          </div>
+        )}
 
       </div>
 
