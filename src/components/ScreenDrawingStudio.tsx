@@ -431,6 +431,17 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
     const totalRC = Math.max(1, props.receivingCardQty || 1);
     const modulesPerRC = Math.max(1, Math.ceil(props.totalUnits / totalRC));
 
+    // Map 1st Module of each RC Zone (Always Starting on Left side 1st module C1R1)
+    const rcStartIndices = new Set<number>();
+    const rcIndexMap = new Map<number, number>();
+    for (let r = 0; r < totalRC; r++) {
+      const startIdx = r * modulesPerRC;
+      if (startIdx < props.totalUnits) {
+        rcStartIndices.add(startIdx);
+        rcIndexMap.set(startIdx, r + 1);
+      }
+    }
+
     // 2. 60A 5V DC Power Supply Rule: Max 9 Modules per 60A PSU (3 cols wide x 3 rows high DC cable reach limit)
     const maxModulesPerPSU = 9;
     const totalPSU = Math.max(1, Math.ceil(props.totalUnits / maxModulesPerPSU));
@@ -445,7 +456,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
         const centerRow = Math.min(rBlock * 3 + 1, props.heightRows - 1);
         const centerCol = Math.min(cBlock * 3 + 1, props.widthCols - 1);
         const centerIdx = centerRow * props.widthCols + centerCol;
-        if (!psuCenterIndices.has(centerIdx)) {
+        if (!psuCenterIndices.has(centerIdx) && !rcStartIndices.has(centerIdx)) {
           psuCenterIndices.add(centerIdx);
           psuIndexMap.set(centerIdx, psuCounter++);
         }
@@ -456,7 +467,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
       <div style={{ position: 'relative', width: '100%', maxWidth: '850px', margin: '30px auto' }}>
         {/* Header Banner */}
         <div style={{ textAlign: 'center', marginBottom: '15px', color: theme.dimLine, fontWeight: 'bold', fontSize: '0.82rem' }}>
-          REAR CABLING & HARDWARE LOOP | RECEIVING CARDS: {totalRC} UNITS | 60A POWER SUPPLIES (9 MOD/PSU): {totalPSU} UNITS
+          REAR CABLING & HARDWARE LOOP | RECEIVING CARDS (STARTS 1ST MOD LEFT C1R1): {totalRC} UNITS | 60A PSUs: {totalPSU} UNITS
         </div>
 
         {/* Screen Module Rear Grid */}
@@ -474,10 +485,10 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
             const col = (idx % props.widthCols) + 1;
             const row = Math.floor(idx / props.widthCols) + 1;
 
-            const rcIndex = Math.floor(idx / modulesPerRC);
-            const isRCCenter = (idx % modulesPerRC === Math.floor(modulesPerRC / 2)) && (rcIndex < totalRC);
+            const isRCStart = rcStartIndices.has(idx);
+            const rcNum = rcIndexMap.get(idx);
 
-            const isPSUCenter = (!isRCCenter) && psuCenterIndices.has(idx);
+            const isPSUCenter = (!isRCStart) && psuCenterIndices.has(idx);
             const psuNum = psuIndexMap.get(idx);
 
             return (
@@ -495,11 +506,11 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                   overflow: 'hidden'
                 }}
               >
-                {/* Receiver Card Badge */}
-                {isRCCenter ? (
+                {/* Receiver Card Badge - Mounted at 1st Module on Left Side (C1R1) */}
+                {isRCStart ? (
                   <div style={{ 
-                    width: '85%', 
-                    height: '60%', 
+                    width: '90%', 
+                    height: '65%', 
                     background: theme.cardColor, 
                     borderRadius: '4px',
                     display: 'flex',
@@ -507,13 +518,13 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: '#fff',
-                    fontSize: '0.65rem',
+                    fontSize: '0.62rem',
                     fontWeight: 'bold',
-                    boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
-                    border: '1px solid #fff'
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.4)',
+                    border: '1.5px solid #fff'
                   }}>
-                    <span>RC-{rcIndex + 1}</span>
-                    <span style={{ fontSize: '0.48rem', opacity: 0.85 }}>RECEIVER</span>
+                    <span>RC-{rcNum}</span>
+                    <span style={{ fontSize: '0.45rem', opacity: 0.9 }}>1ST MOD (C{col}R{row})</span>
                   </div>
                 ) : isPSUCenter ? (
                   /* 60A Power Supply Badge */
@@ -535,14 +546,14 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                     <span style={{ fontSize: '0.48rem' }}>60A (9 Mod)</span>
                   </div>
                 ) : (
-                  /* Standard Module Terminal Rear */
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: 0.7 }}>
+                  /* Standard Module Terminal Rear with Module-to-Module Loop Indicator */
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: 0.85 }}>
                     <span style={{ fontSize: '0.6rem', color: theme.textMain, fontWeight: '600' }}>
                       C{col}R{row}
                     </span>
-                    <div style={{ display: 'flex', gap: '4px', marginTop: '3px' }}>
-                      <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: theme.dataCable }} title="Cat6 Data" />
-                      <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: theme.powerCable }} title="5V DC Cable (9 Mod max)" />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px' }}>
+                      <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: theme.dataCable }} title="Cat6 Module Loop" />
+                      <span style={{ fontSize: '0.45rem', color: theme.dataCable, fontWeight: 'bold' }}>LOOP→</span>
                     </div>
                   </div>
                 )}

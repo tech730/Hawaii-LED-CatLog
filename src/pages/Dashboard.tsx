@@ -99,13 +99,15 @@ const POWER_SUPPLIES = [
   { id: 'p4', name: 'Chuanglian', desc: 'Value Grade' },
 ];
 
-const RECEIVING_CARDS: Record<string, { model: string; capacity: number; spec: string }> = {
-  novastar: { model: 'Novastar MRV416-N', capacity: 262144, spec: 'Advanced (Max 512x512 with PWM IC)' },
-  colorlight: { model: 'Colorlight i9 Plus', capacity: 262144, spec: 'Ultra Capacity (512x512 Pixels)' },
-  huidu: { model: 'Huidu R512T / R612', capacity: 131000, spec: 'Professional (256x512 Pixels)' },
-  onbon: { model: 'Onbon BX-V75L', capacity: 262000, spec: 'Ultra Capacity (512x512 Pixels)' },
-  oem: { model: 'Generic High-End Card', capacity: 65000, spec: 'Standard Capacity (256x256)' },
-};
+const RECEIVING_CARDS = [
+  { id: 'mrv416n', model: 'Novastar MRV416N', capacity: 262144, maxW: 512, maxH: 512, spec: '512x512 Pixels (Advanced PWM)' },
+  { id: 'mrv416', model: 'Novastar MRV416', capacity: 196608, maxW: 512, maxH: 384, spec: '512x384 Pixels (Standard)' },
+  { id: 'mrv336', model: 'Novastar MRV336', capacity: 131072, maxW: 512, maxH: 256, spec: '512x256 Pixels (Classic)' },
+  { id: 'dh7516', model: 'Novastar DH7516', capacity: 262144, maxW: 512, maxH: 512, spec: '512x512 Pixels (16-Port HUB75)' },
+  { id: 'a5splus', model: 'Novastar A5s Plus', capacity: 262144, maxW: 512, maxH: 512, spec: '512x512 Pixels (Armor Series)' },
+  { id: 'colorlight', model: 'Colorlight i9 Plus', capacity: 262144, maxW: 512, maxH: 512, spec: '512x512 Pixels (Colorlight)' },
+  { id: 'huidu', model: 'Huidu R512T', capacity: 131072, maxW: 512, maxH: 256, spec: '512x256 Pixels (Huidu)' }
+];
 
 const Dashboard: React.FC = () => {
   // Local Config State
@@ -116,6 +118,7 @@ const Dashboard: React.FC = () => {
   const [heightRows, setHeightRows] = useState(3);
   const [activeControlBrand, setActiveControlBrand] = useState(CONTROL_SYSTEMS[0]);
   const [activeProcessor, setActiveProcessor] = useState(CONTROL_SYSTEMS[0].models[5]); // Default VX1000
+  const [activeCard, setActiveCard] = useState(RECEIVING_CARDS[0]); // Default Novastar MRV416N
   const [activePower, setActivePower] = useState(POWER_SUPPLIES[0]);
   const [showResults, setShowResults] = useState(false);
   const [simulatorTab, setSimulatorTab] = useState<'visualizer' | 'drawing'>('visualizer');
@@ -228,12 +231,9 @@ const Dashboard: React.FC = () => {
   const resH = Math.round((heightRows * unitH * 1000) / parseFloat(activePitch));
   const totalPixels = resW * resH;
 
-  // Receiving Card lookup
-  const currentCard = RECEIVING_CARDS[activeControlBrand.id] || RECEIVING_CARDS.oem;
-
-  // Receiving Card logic (80% Safety Capacity)
+  // Receiving Card logic (80% Safety Load Capacity)
   const receivingCardSafetyFactor = 0.8;
-  const receivingCardQty = (isRental || isGobCabinet) ? totalUnits : Math.ceil(totalPixels / (currentCard.capacity * receivingCardSafetyFactor));
+  const receivingCardQty = (isRental || isGobCabinet) ? totalUnits : Math.ceil(totalPixels / (activeCard.capacity * receivingCardSafetyFactor));
   const getDefaultParams = () => [
     { id: '1', group: 'p1', category: 'Technology / Scene', label: 'Scene', value: activeScene.name, unit: '-' },
     { id: '2', group: 'p1', category: 'Pixel Pitch', label: 'Pitch', value: `P${activePitch}`, unit: 'mm' },
@@ -251,8 +251,8 @@ const Dashboard: React.FC = () => {
   const panelSpec = isRental ? '500x500mm' : (isGobCabinet ? '600x337.5mm' : '320x160mm');
   const panelTypeStr = isRental ? 'Rental' : (isGobCabinet ? 'GOB Cabinet' : (isOutdoor ? 'Outdoor' : 'Indoor'));
 
-  const receivingCardModelStr = isGobCabinet ? 'Novastar' : currentCard.model;
-  const receivingCardSpecStr = isGobCabinet ? '1 per Cabinet' : `${currentCard.spec} (Load limit: 80%)`;
+  const receivingCardModelStr = isGobCabinet ? 'Novastar' : activeCard.model;
+  const receivingCardSpecStr = isGobCabinet ? '1 per Cabinet' : `${activeCard.spec} (80% Safety Load limit)`;
 
   const getDefaultBOM = () => [
     { id: 'b1', item: 'LED Module', model: `${activeBrand.name} P${activePitch} ${panelTypeStr}`, qty: totalUnits, spec: `${panelSpec} Panel` },
@@ -689,6 +689,31 @@ const Dashboard: React.FC = () => {
               </button>
             ))}
           </div>
+        {/* Panel 4.5: Receiving Card Selection */}
+        <div className="glass-card" style={{ padding: '15px' }}>
+          <h3 style={{ fontSize: '1rem', marginBottom: '12px', color: 'var(--primary)', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>4.5: Receiving Card Model</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '180px', overflowY: 'auto' }}>
+            {RECEIVING_CARDS.map(rc => (
+              <button key={rc.id} onClick={() => setActiveCard(rc)} style={{
+                padding: '6px 10px',
+                textAlign: 'left',
+                background: activeCard.id === rc.id ? '#eff6ff' : 'transparent',
+                border: `1px solid ${activeCard.id === rc.id ? '#3b82f6' : '#e2e8f0'}`,
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div>
+                  <div style={{ fontWeight: activeCard.id === rc.id ? 'bold' : 'normal', color: activeCard.id === rc.id ? '#1e40af' : '#1e293b' }}>{rc.model}</div>
+                  <div style={{ fontSize: '0.65rem', color: '#64748b' }}>{rc.spec}</div>
+                </div>
+                <span style={{ fontSize: '0.7rem', color: '#2563eb', fontWeight: 'bold' }}>{rc.maxW}x{rc.maxH}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Panel 5: Power Supply */}
@@ -860,8 +885,8 @@ const Dashboard: React.FC = () => {
             />
           </div>
         )}
-      </div>
-
+          </div>
+        </div>
       </div>
     </div>
   );
