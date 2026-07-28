@@ -427,17 +427,36 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
 
   // 04: REAR WIRING LOOP & HARDWARE DISTRIBUTION
   const renderRearWiringContent = (theme: typeof currentTheme) => {
-    // Correct Receiving Card & Power Supply Placement Calculations
+    // 1. Receiving Cards Calculation (80% Safety Load Limit)
     const totalRC = Math.max(1, props.receivingCardQty || 1);
     const modulesPerRC = Math.max(1, Math.ceil(props.totalUnits / totalRC));
-    const totalPSU = Math.max(1, Math.ceil(Number(props.powerMaxW || 300) / 300));
-    const modulesPerPSU = Math.max(1, Math.ceil(props.totalUnits / totalPSU));
+
+    // 2. 60A 5V DC Power Supply Rule: Max 9 Modules per 60A PSU (3 cols wide x 3 rows high DC cable reach limit)
+    const maxModulesPerPSU = 9;
+    const totalPSU = Math.max(1, Math.ceil(props.totalUnits / maxModulesPerPSU));
+
+    // Map PSU positions to center of each 3-col x 3-row module block
+    const psuCenterIndices = new Set<number>();
+    const psuIndexMap = new Map<number, number>();
+    let psuCounter = 1;
+
+    for (let rBlock = 0; rBlock < Math.ceil(props.heightRows / 3); rBlock++) {
+      for (let cBlock = 0; cBlock < Math.ceil(props.widthCols / 3); cBlock++) {
+        const centerRow = Math.min(rBlock * 3 + 1, props.heightRows - 1);
+        const centerCol = Math.min(cBlock * 3 + 1, props.widthCols - 1);
+        const centerIdx = centerRow * props.widthCols + centerCol;
+        if (!psuCenterIndices.has(centerIdx)) {
+          psuCenterIndices.add(centerIdx);
+          psuIndexMap.set(centerIdx, psuCounter++);
+        }
+      }
+    }
 
     return (
       <div style={{ position: 'relative', width: '100%', maxWidth: '850px', margin: '30px auto' }}>
         {/* Header Banner */}
-        <div style={{ textAlign: 'center', marginBottom: '15px', color: theme.dimLine, fontWeight: 'bold', fontSize: '0.85rem' }}>
-          REAR CABLING & HARDWARE LOOP | RECEIVING CARDS: {totalRC} UNITS | POWER SUPPLIES: {totalPSU} UNITS
+        <div style={{ textAlign: 'center', marginBottom: '15px', color: theme.dimLine, fontWeight: 'bold', fontSize: '0.82rem' }}>
+          REAR CABLING & HARDWARE LOOP | RECEIVING CARDS: {totalRC} UNITS | 60A POWER SUPPLIES (9 MOD/PSU): {totalPSU} UNITS
         </div>
 
         {/* Screen Module Rear Grid */}
@@ -458,8 +477,8 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
             const rcIndex = Math.floor(idx / modulesPerRC);
             const isRCCenter = (idx % modulesPerRC === Math.floor(modulesPerRC / 2)) && (rcIndex < totalRC);
 
-            const psuIndex = Math.floor(idx / modulesPerPSU);
-            const isPSUCenter = (!isRCCenter) && (idx % modulesPerPSU === Math.floor(modulesPerPSU / 2)) && (psuIndex < totalPSU);
+            const isPSUCenter = (!isRCCenter) && psuCenterIndices.has(idx);
+            const psuNum = psuIndexMap.get(idx);
 
             return (
               <div 
@@ -479,8 +498,8 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                 {/* Receiver Card Badge */}
                 {isRCCenter ? (
                   <div style={{ 
-                    width: '80%', 
-                    height: '55%', 
+                    width: '85%', 
+                    height: '60%', 
                     background: theme.cardColor, 
                     borderRadius: '4px',
                     display: 'flex',
@@ -494,13 +513,13 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                     border: '1px solid #fff'
                   }}>
                     <span>RC-{rcIndex + 1}</span>
-                    <span style={{ fontSize: '0.5rem', opacity: 0.8 }}>RECEIVER</span>
+                    <span style={{ fontSize: '0.48rem', opacity: 0.85 }}>RECEIVER</span>
                   </div>
                 ) : isPSUCenter ? (
-                  /* Power Supply Badge */
+                  /* 60A Power Supply Badge */
                   <div style={{ 
-                    width: '80%', 
-                    height: '50%', 
+                    width: '85%', 
+                    height: '55%', 
                     background: theme.powerCable, 
                     borderRadius: '4px',
                     display: 'flex',
@@ -512,8 +531,8 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                     fontWeight: 'bold',
                     boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
                   }}>
-                    <span>PSU-{psuIndex + 1}</span>
-                    <span style={{ fontSize: '0.5rem' }}>5V DC</span>
+                    <span>PSU-{psuNum}</span>
+                    <span style={{ fontSize: '0.48rem' }}>60A (9 Mod)</span>
                   </div>
                 ) : (
                   /* Standard Module Terminal Rear */
@@ -523,7 +542,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                     </span>
                     <div style={{ display: 'flex', gap: '4px', marginTop: '3px' }}>
                       <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: theme.dataCable }} title="Cat6 Data" />
-                      <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: theme.powerCable }} title="5V Power" />
+                      <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: theme.powerCable }} title="5V DC Cable (9 Mod max)" />
                     </div>
                   </div>
                 )}
