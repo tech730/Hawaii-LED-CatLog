@@ -427,18 +427,31 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
 
   // 04: REAR WIRING LOOP & HARDWARE DISTRIBUTION
   const renderRearWiringContent = (theme: typeof currentTheme) => {
-    // 1. Receiving Cards Calculation (80% Safety Load Limit)
-    const totalRC = Math.max(1, props.receivingCardQty || 1);
-    const modulesPerRC = Math.max(1, Math.ceil(props.totalUnits / totalRC));
+    // 1. Calculate max cols & rows per Receiver Card (512x512 Pixel Limit)
+    const modResW = Math.round((props.unitW * 1000) / parseFloat(props.pitch)); // e.g. 128px for P2.5 320mm
+    const modResH = Math.round((props.unitH * 1000) / parseFloat(props.pitch)); // e.g. 64px for P2.5 160mm
 
-    // Map 1st Module of each RC Zone (Always Starting on Left side 1st module C1R1)
+    const maxColsPerRC = Math.max(1, Math.floor(512 / modResW)); // e.g. 512 / 128 = 4 cols max
+    const maxRowsPerRC = Math.max(1, Math.floor(512 / modResH)); // e.g. 512 / 64 = 8 rows max
+
+    const rcColsCount = Math.ceil(props.widthCols / maxColsPerRC);
+    const rcRowsCount = Math.ceil(props.heightRows / maxRowsPerRC);
+    const totalRC = props.isRental ? props.totalUnits : (rcColsCount * rcRowsCount);
+
+    // Map 1st Module of each RC Zone (Top-Left module of each maxColsPerRC x maxRowsPerRC block)
     const rcStartIndices = new Set<number>();
     const rcIndexMap = new Map<number, number>();
-    for (let r = 0; r < totalRC; r++) {
-      const startIdx = r * modulesPerRC;
-      if (startIdx < props.totalUnits) {
-        rcStartIndices.add(startIdx);
-        rcIndexMap.set(startIdx, r + 1);
+    let rcCounter = 1;
+
+    for (let rBlock = 0; rBlock < rcRowsCount; rBlock++) {
+      for (let cBlock = 0; cBlock < rcColsCount; cBlock++) {
+        const startRow = rBlock * maxRowsPerRC;
+        const startCol = cBlock * maxColsPerRC;
+        const startIdx = startRow * props.widthCols + startCol;
+        if (startIdx < props.totalUnits) {
+          rcStartIndices.add(startIdx);
+          rcIndexMap.set(startIdx, rcCounter++);
+        }
       }
     }
 
@@ -467,7 +480,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
       <div style={{ position: 'relative', width: '100%', maxWidth: '850px', margin: '30px auto' }}>
         {/* Header Banner */}
         <div style={{ textAlign: 'center', marginBottom: '15px', color: theme.dimLine, fontWeight: 'bold', fontSize: '0.82rem' }}>
-          REAR CABLING & HARDWARE LOOP | RECEIVING CARDS (STARTS 1ST MOD LEFT C1R1): {totalRC} UNITS | 60A PSUs: {totalPSU} UNITS
+          REAR CABLING & HARDWARE LOOP | RECEIVING CARDS (512px MAX WIDTH = {maxColsPerRC} MOD COLS MAX): {totalRC} UNITS | 60A PSUs: {totalPSU} UNITS
         </div>
 
         {/* Screen Module Rear Grid */}

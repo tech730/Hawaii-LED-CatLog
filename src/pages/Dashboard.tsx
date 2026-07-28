@@ -231,9 +231,20 @@ const Dashboard: React.FC = () => {
   const resH = Math.round((heightRows * unitH * 1000) / parseFloat(activePitch));
   const totalPixels = resW * resH;
 
-  // Receiving Card logic (80% Safety Load Capacity)
-  const receivingCardSafetyFactor = 0.8;
-  const receivingCardQty = (isRental || isGobCabinet) ? totalUnits : Math.ceil(totalPixels / (activeCard.capacity * receivingCardSafetyFactor));
+  // Receiver Card 512x512 Pixel Width & Height Limit Calculations
+  const modResW = Math.round((unitW * 1000) / parseFloat(activePitch));
+  const modResH = Math.round((unitH * 1000) / parseFloat(activePitch));
+
+  const cardMaxW = activeCard.maxW || 512;
+  const cardMaxH = activeCard.maxH || 512;
+
+  const maxColsPerRC = Math.max(1, Math.floor(cardMaxW / modResW)); // e.g. 512 / 128 = 4 cols max
+  const maxRowsPerRC = Math.max(1, Math.floor(cardMaxH / modResH)); // e.g. 512 / 64 = 8 rows max
+
+  const rcColsNeeded = Math.ceil(widthCols / maxColsPerRC);
+  const rcRowsNeeded = Math.ceil(heightRows / maxRowsPerRC);
+
+  const receivingCardQty = (isRental || isGobCabinet) ? totalUnits : (rcColsNeeded * rcRowsNeeded);
   const getDefaultParams = () => [
     { id: '1', group: 'p1', category: 'Technology / Scene', label: 'Scene', value: activeScene.name, unit: '-' },
     { id: '2', group: 'p1', category: 'Pixel Pitch', label: 'Pitch', value: `P${activePitch}`, unit: 'mm' },
