@@ -259,8 +259,12 @@ const Dashboard: React.FC = () => {
     { id: 'b2', item: 'Receiving Card', model: receivingCardModelStr, qty: receivingCardQty, spec: receivingCardSpecStr },
     { id: 'b3', item: 'Controller', model: `${activeControlBrand.name} ${activeProcessor.name}`, qty: 1, spec: `${activeProcessor.ports} Ports / ${activeProcessor.capacity.toLocaleString()} Pixels` },
     { id: 'b4', item: powerSupplyLabel, model: powerSupplyModel, qty: powerSupplyQty, spec: powerSupplySpec },
-    { id: 'b5', item: 'Total Weight', model: 'Calculated Structural Load', qty: 1, spec: `~ ${totalWeight} kg` },
-    { id: 'b6', item: 'Power Consumption', model: 'Maximum Load @ 230V', qty: 1, spec: `${powerMax}W (Max) / ~ ${ampsMax}A` },
+    { id: 'b5', item: 'Laser Cut GI Sheet', model: 'GI Sheet 2mm Thickness', qty: 1, spec: `${(Math.round(widthCols * unitW * 1000) + 2)}x${(Math.round(heightRows * unitH * 1000) + 2)}mm (${totalArea} m²)` },
+    { id: 'b6', item: 'MS Tube 40x20mm', model: 'Mild Steel Tubing Sub-Frame', qty: `${Math.ceil((widthCols + 1) * parseFloat(totalHeight))} m`, spec: '20mm Depth Structural Sub-Assembly' },
+    { id: 'b7', item: 'MS Tube 50x25mm', model: 'Mild Steel Main Tube Frame', qty: `${Math.ceil((widthCols / 2 + 1) * parseFloat(totalHeight))} m`, spec: '25mm Depth Main Structure (80mm Total)' },
+    { id: 'b8', item: 'Module Magnets', model: 'M4 Magnet Stud Pillars', qty: totalUnits * 4, spec: '4 Magnets per LED Module' },
+    { id: 'b9', item: 'Total Weight', model: 'Calculated Structural Load', qty: 1, spec: `~ ${totalWeight} kg` },
+    { id: 'b10', item: 'Power Consumption', model: 'Maximum Load @ 230V', qty: 1, spec: `${powerMax}W (Max) / ~ ${ampsMax}A` },
   ];
 
   const portsRequired = Math.ceil(totalPixels / 650000);

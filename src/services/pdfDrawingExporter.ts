@@ -129,18 +129,18 @@ export async function exportTechnicalDrawingPDF(options: PDFExportOptions): Prom
     pdf.text(`Total Dimensions: ${projectInfo.totalWidthM}m (W) x ${projectInfo.totalHeightM}m (H)`, 14, tbY + 30);
     pdf.text(`Cabinet/Module Count: ${projectInfo.widthCols} Cols x ${projectInfo.heightRows} Rows (${projectInfo.totalUnits} Units)`, 14, tbY + 36);
 
-    // Column 2: Electrical & Control Specs
+    // Column 2: Electrical & Structure Specs
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(56, 189, 248);
-    pdf.text('ELECTRICAL & CONTROL HARDWARE', 14 + col1W, tbY + 6);
+    pdf.text('ELECTRICAL & STRUCTURE HARDWARE', 14 + col1W, tbY + 6);
 
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(226, 232, 240);
     pdf.text(`Video Controller: ${projectInfo.processor}`, 14 + col1W, tbY + 12);
     pdf.text(`Power Supplies: ${projectInfo.powerSupply}`, 14 + col1W, tbY + 18);
-    pdf.text(`Max Electrical Load: ${projectInfo.powerMaxW} W (~ ${(Number(projectInfo.powerMaxW) / 230).toFixed(1)} A)`, 14 + col1W, tbY + 24);
-    pdf.text(`Est. Total Screen Weight: ${projectInfo.totalWeightKg} kg`, 14 + col1W, tbY + 30);
-    pdf.text(`Signal Cable Standard: Shielded Cat6 / Gigabit Ethernet Loop`, 14 + col1W, tbY + 36);
+    pdf.text(`Max Load: ${projectInfo.powerMaxW} W (~ ${(Number(projectInfo.powerMaxW) / 230).toFixed(1)} A) | Weight: ${projectInfo.totalWeightKg} kg`, 14 + col1W, tbY + 24);
+    pdf.text(`Structure Depth: 80 mm | GI Sheet 2mm + MS Tube 40x20 & 50x25mm`, 14 + col1W, tbY + 30);
+    pdf.text(`Magnet Mounts: 4x Per Module | Cable: Shielded Cat6`, 14 + col1W, tbY + 36);
 
     // Column 3: Approval / Sign-off Title Block
     pdf.setFont('helvetica', 'bold');

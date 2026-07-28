@@ -51,7 +51,7 @@ TABLE
 2
 LAYER
 70
-5
+6
 0
 LAYER
 2
@@ -80,6 +80,16 @@ MODULE_GRID
 0
 62
 1
+6
+CONTINUOUS
+0
+LAYER
+2
+STRUCTURE_80MM
+70
+0
+62
+4
 6
 CONTINUOUS
 0
@@ -221,10 +231,11 @@ ${y2}
 `;
   };
 
-  // 1. Draw Outer Screen Boundary
+  // 1. FRONT VIEW: Outer Screen Boundary
   addRect('OUTLINE', 0, 0, totalWidthMm, totalHeightMm);
+  addText('TEXT', totalWidthMm / 2 - 150, -50, 40, '01: FRONT ELEVATION');
 
-  // 2. Draw Module / Cabinet Grid
+  // 2. FRONT VIEW: Module Grid
   for (let r = 0; r < heightRows; r++) {
     for (let c = 0; c < widthCols; c++) {
       const x1 = c * unitWidthMm;
@@ -233,39 +244,56 @@ ${y2}
       const y2 = y1 + unitHeightMm;
       addRect('MODULE_GRID', x1, y1, x2, y2);
 
-      // Add small module index text inside grid
-      const textX = x1 + unitWidthMm / 4;
-      const textY = y1 + unitHeightMm / 2;
       const label = `C${c + 1}R${r + 1}`;
-      addText('TEXT', textX, textY, Math.min(unitWidthMm, unitHeightMm) * 0.1, label);
+      addText('TEXT', x1 + unitWidthMm / 4, y1 + unitHeightMm / 2, Math.min(unitWidthMm, unitHeightMm) * 0.1, label);
     }
   }
 
-  // 3. Dimension Lines
-  const dimOffset = 150; // 150mm offset for dim lines
-  // Width Dim line top
-  addLine('DIMENSIONS', 0, totalHeightMm + dimOffset, totalWidthMm, totalHeightMm + dimOffset);
-  addLine('DIMENSIONS', 0, totalHeightMm + 20, 0, totalHeightMm + dimOffset + 30);
-  addLine('DIMENSIONS', totalWidthMm, totalHeightMm + 20, totalWidthMm, totalHeightMm + dimOffset + 30);
-  addText('DIMENSIONS', totalWidthMm / 2 - 100, totalHeightMm + dimOffset + 40, 50, `W: ${totalWidthMm} mm (${totalWidthM}m)`);
+  // 3. TOP VIEW (80mm Depth Section) Positioned Above Front Elevation
+  const topY1 = totalHeightMm + 250;
+  const topY2 = topY1 + 80; // 80mm Depth
+  addRect('OUTLINE', 0, topY1, totalWidthMm, topY2);
+  addText('TEXT', totalWidthMm / 2 - 150, topY2 + 20, 35, '02: TOP VIEW (80mm DEPTH)');
 
-  // Height Dim line right
-  addLine('DIMENSIONS', totalWidthMm + dimOffset, 0, totalWidthMm + dimOffset, totalHeightMm);
-  addLine('DIMENSIONS', totalWidthMm + 20, 0, totalWidthMm + dimOffset + 30, 0);
-  addLine('DIMENSIONS', totalWidthMm + 20, totalHeightMm, totalWidthMm + dimOffset + 30, totalHeightMm);
-  addText('DIMENSIONS', totalWidthMm + dimOffset + 40, totalHeightMm / 2, 50, `H: ${totalHeightMm} mm (${totalHeightM}m)`);
+  // 5-Layer Stack Lines in Top View
+  addLine('STRUCTURE_80MM', 0, topY1 + 15, totalWidthMm, topY1 + 15); // LED Module Front (15mm)
+  addLine('STRUCTURE_80MM', 0, topY1 + 17, totalWidthMm, topY1 + 17); // GI Sheet 2mm
+  addLine('STRUCTURE_80MM', 0, topY1 + 37, totalWidthMm, topY1 + 37); // MS Tube 40x20mm
+  addLine('STRUCTURE_80MM', 0, topY1 + 62, totalWidthMm, topY1 + 62); // MS Tube 50x25mm
 
-  // 4. Title Block
+  // 4. SIDE VIEW (80mm Depth Vertical Section) Positioned to Right of Front Elevation
+  const sideX1 = totalWidthMm + 250;
+  const sideX2 = sideX1 + 80; // 80mm Depth
+  addRect('OUTLINE', sideX1, 0, sideX2, totalHeightMm);
+  addText('TEXT', sideX1, -50, 35, '03: SIDE VIEW (80mm DEPTH)');
+
+  // 5-Layer Stack Lines in Side View
+  addLine('STRUCTURE_80MM', sideX1 + 15, 0, sideX1 + 15, totalHeightMm); // LED Module Front (15mm)
+  addLine('STRUCTURE_80MM', sideX1 + 17, 0, sideX1 + 17, totalHeightMm); // GI Sheet 2mm
+  addLine('STRUCTURE_80MM', sideX1 + 37, 0, sideX1 + 37, totalHeightMm); // MS Tube 40x20mm
+  addLine('STRUCTURE_80MM', sideX1 + 62, 0, sideX1 + 62, totalHeightMm); // MS Tube 50x25mm
+
+  // 5. Dimension Lines
+  const dimOffset = 120;
+  // Width Dim line top view
+  addLine('DIMENSIONS', 0, topY2 + dimOffset, totalWidthMm, topY2 + dimOffset);
+  addText('DIMENSIONS', totalWidthMm / 2 - 100, topY2 + dimOffset + 30, 40, `W: ${totalWidthMm} mm (${totalWidthM}m)`);
+
+  // Height Dim line right of side view
+  addLine('DIMENSIONS', sideX2 + dimOffset, 0, sideX2 + dimOffset, totalHeightMm);
+  addText('DIMENSIONS', sideX2 + dimOffset + 30, totalHeightMm / 2, 40, `H: ${totalHeightMm} mm (${totalHeightM}m)`);
+
+  // 6. Title Block
   const tbX = 0;
   const tbY = -400; // Place below screen
-  const tbW = Math.max(totalWidthMm, 1200);
+  const tbW = Math.max(totalWidthMm + 350, 1400);
   const tbH = 300;
 
   addRect('OUTLINE', tbX, tbY, tbX + tbW, tbY + tbH);
-  addText('TEXT', tbX + 30, tbY + 220, 40, `HAWAII LED ARCHITECTURAL DRAWING`);
-  addText('TEXT', tbX + 30, tbY + 160, 30, `PROJECT: ${brandName} ${sceneName} (P${pitch})`);
-  addText('TEXT', tbX + 30, tbY + 100, 25, `SCREEN SIZE: ${totalWidthM}m (W) x ${totalHeightM}m (H) | RES: ${resW} x ${resH} px`);
-  addText('TEXT', tbX + 30, tbY + 40, 25, `UNITS: ${widthCols}x${heightRows} (${totalUnits} Pcs @ ${unitWidthMm}x${unitHeightMm}mm) | DATE: ${new Date().toLocaleDateString()}`);
+  addText('TEXT', tbX + 30, tbY + 220, 40, `HAWAII LED ARCHITECTURAL & STRUCTURAL DRAWING`);
+  addText('TEXT', tbX + 30, tbY + 160, 30, `PROJECT: ${brandName} ${sceneName} (P${pitch}) | DRAWING NO: 4618`);
+  addText('TEXT', tbX + 30, tbY + 100, 25, `SCREEN: ${totalWidthM}m (W) x ${totalHeightM}m (H) | DEPTH: 80mm | RES: ${resW} x ${resH} px`);
+  addText('TEXT', tbX + 30, tbY + 40, 25, `FRAME: GI Sheet 2mm + MS Tube 40x20 & 50x25mm | UNITS: ${totalUnits} Pcs (${unitWidthMm}x${unitHeightMm}mm) | DATE: 13/07/2026`);
 
   dxf += `0
 ENDSEC

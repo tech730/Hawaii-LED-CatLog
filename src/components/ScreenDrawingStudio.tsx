@@ -25,7 +25,7 @@ export interface ScreenDrawingProps {
   receivingCardQty: number;
 }
 
-type ViewMode = 'front' | 'rear' | 'structure';
+type ViewMode = 'front' | 'top' | 'side' | 'rear';
 type ThemeMode = 'blueprint' | 'dark' | 'clean';
 
 export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
@@ -41,6 +41,8 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
 
   const unitWidthMm = Math.round(props.unitW * 1000);
   const unitHeightMm = Math.round(props.unitH * 1000);
+  const totalWidthMm = props.widthCols * unitWidthMm;
+  const totalHeightMm = props.heightRows * unitHeightMm;
 
   // Theme Styling Map
   const themeStyles = {
@@ -54,7 +56,11 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
       dataCable: '#ef4444',
       powerCable: '#eab308',
       cardColor: '#10b981',
-      frameColor: '#64748b'
+      frameColor: '#64748b',
+      giSheet: '#0284c7',
+      msTube40: '#f59e0b',
+      msTube50: '#ec4899',
+      magnetColor: '#e11d48'
     },
     dark: {
       bg: '#050505',
@@ -66,7 +72,11 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
       dataCable: '#f43f5e',
       powerCable: '#f59e0b',
       cardColor: '#3b82f6',
-      frameColor: '#4b5563'
+      frameColor: '#4b5563',
+      giSheet: '#059669',
+      msTube40: '#d97706',
+      msTube50: '#db2777',
+      magnetColor: '#dc2626'
     },
     clean: {
       bg: '#ffffff',
@@ -78,7 +88,11 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
       dataCable: '#dc2626',
       powerCable: '#d97706',
       cardColor: '#059669',
-      frameColor: '#94a3b8'
+      frameColor: '#94a3b8',
+      giSheet: '#2563eb',
+      msTube40: '#d97706',
+      msTube50: '#c026d3',
+      magnetColor: '#b91c1c'
     }
   };
 
@@ -161,19 +175,25 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
             onClick={() => setViewMode('front')}
             style={{ padding: '6px 12px', fontSize: '0.8rem', background: viewMode === 'front' ? '#38bdf8' : 'transparent', color: viewMode === 'front' ? '#0f172a' : '#94a3b8', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
           >
-            Front Elevation
+            01: Front View
+          </button>
+          <button 
+            onClick={() => setViewMode('top')}
+            style={{ padding: '6px 12px', fontSize: '0.8rem', background: viewMode === 'top' ? '#38bdf8' : 'transparent', color: viewMode === 'top' ? '#0f172a' : '#94a3b8', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+          >
+            02: Top View (80mm Section)
+          </button>
+          <button 
+            onClick={() => setViewMode('side')}
+            style={{ padding: '6px 12px', fontSize: '0.8rem', background: viewMode === 'side' ? '#38bdf8' : 'transparent', color: viewMode === 'side' ? '#0f172a' : '#94a3b8', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+          >
+            03: Side View (80mm Section)
           </button>
           <button 
             onClick={() => setViewMode('rear')}
             style={{ padding: '6px 12px', fontSize: '0.8rem', background: viewMode === 'rear' ? '#38bdf8' : 'transparent', color: viewMode === 'rear' ? '#0f172a' : '#94a3b8', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
           >
-            Rear Cabling Diagram
-          </button>
-          <button 
-            onClick={() => setViewMode('structure')}
-            style={{ padding: '6px 12px', fontSize: '0.8rem', background: viewMode === 'structure' ? '#38bdf8' : 'transparent', color: viewMode === 'structure' ? '#0f172a' : '#94a3b8', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
-          >
-            Structure & Stand
+            04: Wiring Loop
           </button>
         </div>
 
@@ -272,7 +292,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
           background: currentTheme.bg, 
           padding: '40px 60px 80px 60px', 
           position: 'relative', 
-          minHeight: '520px', 
+          minHeight: '560px', 
           display: 'flex', 
           flexDirection: 'column',
           alignItems: 'center',
@@ -281,13 +301,13 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
         }}
       >
         
-        {/* Drawing Title Header overlay for blueprint style */}
+        {/* Drawing Title Header overlay */}
         <div style={{ position: 'absolute', top: '15px', left: '20px', fontSize: '0.75rem', color: currentTheme.textSub }}>
-          <div style={{ fontWeight: 'bold', color: currentTheme.textMain }}>MODE: {viewMode.toUpperCase()} VIEW</div>
-          <div>Unit Size: {unitWidthMm}mm x {unitHeightMm}mm | Scale: N.T.S</div>
+          <div style={{ fontWeight: 'bold', color: currentTheme.textMain }}>VIEW MODE: {viewMode.toUpperCase()} CAD SECTION</div>
+          <div>Structure Depth: 80mm | Outer Box: {totalWidthMm + 2} x {totalHeightMm + 2} x 80mm</div>
         </div>
 
-        {/* Human Scale Reference (Person silhouette) */}
+        {/* Human Scale Reference */}
         {showHumanScale && (
           <div style={{ 
             position: 'absolute', 
@@ -299,13 +319,9 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
             opacity: 0.6
           }}>
             <svg width="24" height="60" viewBox="0 0 24 60" fill="none" stroke={currentTheme.textSub} strokeWidth="1.5">
-              {/* Head */}
               <circle cx="12" cy="8" r="6" />
-              {/* Body */}
               <line x1="12" y1="14" x2="12" y2="36" />
-              {/* Arms */}
               <line x1="4" y1="20" x2="20" y2="20" />
-              {/* Legs */}
               <line x1="12" y1="36" x2="6" y2="58" />
               <line x1="12" y1="36" x2="18" y2="58" />
             </svg>
@@ -313,144 +329,308 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
           </div>
         )}
 
-        {/* Interactive Grid Canvas */}
-        <div style={{ position: 'relative', width: '100%', maxWidth: '850px', margin: '30px auto' }}>
-          
-          {/* Top Dimension Line (Width) */}
-          {showDimensions && (
-            <div style={{ position: 'absolute', top: '-40px', left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ fontSize: '0.8rem', color: currentTheme.dimLine, fontWeight: 'bold', marginBottom: '2px' }}>
-                W: {props.totalWidthM} m ({unitWidthMm * props.widthCols} mm) - {props.resW} px
-              </div>
-              <div style={{ width: '100%', borderBottom: `1.5px dashed ${currentTheme.dimLine}`, position: 'relative' }}>
-                <div style={{ position: 'absolute', left: 0, top: '-5px', width: '2px', height: '10px', background: currentTheme.dimLine }} />
-                <div style={{ position: 'absolute', right: 0, top: '-5px', width: '2px', height: '10px', background: currentTheme.dimLine }} />
-              </div>
-            </div>
-          )}
-
-          {/* Right Dimension Line (Height) */}
-          {showDimensions && (
-            <div style={{ position: 'absolute', right: '-120px', top: 0, bottom: 0, width: '100px', display: 'flex', alignItems: 'center' }}>
-              <div style={{ height: '100%', borderRight: `1.5px dashed ${currentTheme.dimLine}`, position: 'relative', marginRight: '10px' }}>
-                <div style={{ position: 'absolute', top: 0, right: '-5px', width: '10px', height: '2px', background: currentTheme.dimLine }} />
-                <div style={{ position: 'absolute', bottom: 0, right: '-5px', width: '10px', height: '2px', background: currentTheme.dimLine }} />
-              </div>
-              <div style={{ fontSize: '0.8rem', color: currentTheme.dimLine, fontWeight: 'bold', whiteSpace: 'nowrap' }}>
-                H: {props.totalHeightM} m <br/>
-                ({unitHeightMm * props.heightRows} mm) <br/>
-                {props.resH} px
-              </div>
-            </div>
-          )}
-
-          {/* Screen Grid Container */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: `repeat(${props.widthCols}, 1fr)`,
-            width: '100%',
-            aspectRatio: `${props.totalWidthM} / ${props.totalHeightM}`,
-            background: currentTheme.gridFill,
-            border: `2px solid ${currentTheme.textMain}`,
-            boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
-            position: 'relative'
-          }}>
+        {/* ------------------------------------------------------------------ */}
+        {/* VIEW 01: FRONT ELEVATION & REAR CABLING */}
+        {/* ------------------------------------------------------------------ */}
+        {(viewMode === 'front' || viewMode === 'rear') && (
+          <div style={{ position: 'relative', width: '100%', maxWidth: '850px', margin: '30px auto' }}>
             
-            {Array.from({ length: props.totalUnits }).map((_, idx) => {
-              const col = (idx % props.widthCols) + 1;
-              const row = Math.floor(idx / props.widthCols) + 1;
-              
-              return (
-                <div 
-                  key={idx} 
-                  style={{ 
-                    borderRight: `1px dashed ${currentTheme.gridBorder}`, 
-                    borderBottom: `1px dashed ${currentTheme.gridBorder}`,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '4px',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}
-                >
-                  {/* Front Elevation View Details */}
-                  {viewMode === 'front' && (
-                    <>
-                      {showGridLabels && (
-                        <span style={{ fontSize: '0.7rem', color: currentTheme.textMain, fontWeight: '600' }}>
-                          C{col}R{row}
-                        </span>
-                      )}
-                      <span style={{ fontSize: '0.6rem', color: currentTheme.textSub }}>
-                        {unitWidthMm}x{unitHeightMm}
-                      </span>
-                    </>
-                  )}
-
-                  {/* Rear Wiring Diagram View Details */}
-                  {viewMode === 'rear' && (
-                    <>
-                      {/* Receiver Card Box */}
-                      <div style={{ 
-                        width: '60%', 
-                        height: '40%', 
-                        background: currentTheme.cardColor, 
-                        borderRadius: '3px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#fff',
-                        fontSize: '0.6rem',
-                        fontWeight: 'bold',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                      }}>
-                        RC-{idx + 1}
-                      </div>
-
-                      {/* Cabling Loop indicators */}
-                      {showWiringLines && (
-                        <div style={{ position: 'absolute', top: '4px', right: '4px', width: '8px', height: '8px', borderRadius: '50%', background: currentTheme.dataCable }} />
-                      )}
-                    </>
-                  )}
-
-                  {/* Structural View Details */}
-                  {viewMode === 'structure' && (
-                    <div style={{ border: `1px stroke ${currentTheme.frameColor}`, width: '90%', height: '90%', opacity: 0.7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span style={{ fontSize: '0.6rem', color: currentTheme.frameColor }}>BEAM</span>
-                    </div>
-                  )}
+            {/* Top Dimension Line (Width) */}
+            {showDimensions && (
+              <div style={{ position: 'absolute', top: '-40px', left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ fontSize: '0.8rem', color: currentTheme.dimLine, fontWeight: 'bold', marginBottom: '2px' }}>
+                  W: {props.totalWidthM} m ({totalWidthMm} mm) - {props.resW} px
                 </div>
-              );
-            })}
-
-            {/* Rear View Data Cabling Daisy-Chain Line SVG Overlay */}
-            {viewMode === 'rear' && showWiringLines && (
-              <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-                <path 
-                  d={`M 20 20 L ${props.widthCols * 40} 20`} 
-                  stroke={currentTheme.dataCable} 
-                  strokeWidth="2" 
-                  strokeDasharray="4 4" 
-                  fill="none" 
-                />
-              </svg>
+                <div style={{ width: '100%', borderBottom: `1.5px dashed ${currentTheme.dimLine}`, position: 'relative' }}>
+                  <div style={{ position: 'absolute', left: 0, top: '-5px', width: '2px', height: '10px', background: currentTheme.dimLine }} />
+                  <div style={{ position: 'absolute', right: 0, top: '-5px', width: '2px', height: '10px', background: currentTheme.dimLine }} />
+                </div>
+              </div>
             )}
 
-          </div>
+            {/* Right Dimension Line (Height) */}
+            {showDimensions && (
+              <div style={{ position: 'absolute', right: '-130px', top: 0, bottom: 0, width: '110px', display: 'flex', alignItems: 'center' }}>
+                <div style={{ height: '100%', borderRight: `1.5px dashed ${currentTheme.dimLine}`, position: 'relative', marginRight: '10px' }}>
+                  <div style={{ position: 'absolute', top: 0, right: '-5px', width: '10px', height: '2px', background: currentTheme.dimLine }} />
+                  <div style={{ position: 'absolute', bottom: 0, right: '-5px', width: '10px', height: '2px', background: currentTheme.dimLine }} />
+                </div>
+                <div style={{ fontSize: '0.8rem', color: currentTheme.dimLine, fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                  H: {props.totalHeightM} m <br/>
+                  ({totalHeightMm} mm) <br/>
+                  {props.resH} px
+                </div>
+              </div>
+            )}
 
-          {/* Bottom Stand / Truss Mount Bar (Structural view) */}
-          {viewMode === 'structure' && (
-            <div style={{ width: '100%', height: '30px', marginTop: '10px', background: currentTheme.frameColor, borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.75rem', fontWeight: 'bold' }}>
-              MAIN STEEL SUPPORT BEAM & GROUND RIGGING MOUNT
+            {/* Screen Grid Container */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: `repeat(${props.widthCols}, 1fr)`,
+              width: '100%',
+              aspectRatio: `${props.totalWidthM} / ${props.totalHeightM}`,
+              background: currentTheme.gridFill,
+              border: `2px solid ${currentTheme.textMain}`,
+              boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+              position: 'relative'
+            }}>
+              
+              {Array.from({ length: props.totalUnits }).map((_, idx) => {
+                const col = (idx % props.widthCols) + 1;
+                const row = Math.floor(idx / props.widthCols) + 1;
+                
+                return (
+                  <div 
+                    key={idx} 
+                    style={{ 
+                      borderRight: `1px dashed ${currentTheme.gridBorder}`, 
+                      borderBottom: `1px dashed ${currentTheme.gridBorder}`,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '4px',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    {/* Front View Details */}
+                    {viewMode === 'front' && (
+                      <>
+                        {showGridLabels && (
+                          <span style={{ fontSize: '0.7rem', color: currentTheme.textMain, fontWeight: '600' }}>
+                            C{col}R{row}
+                          </span>
+                        )}
+                        <span style={{ fontSize: '0.6rem', color: currentTheme.textSub }}>
+                          {unitWidthMm}x{unitHeightMm}
+                        </span>
+                      </>
+                    )}
+
+                    {/* Rear Wiring View Details */}
+                    {viewMode === 'rear' && (
+                      <>
+                        <div style={{ 
+                          width: '60%', 
+                          height: '40%', 
+                          background: currentTheme.cardColor, 
+                          borderRadius: '3px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#fff',
+                          fontSize: '0.6rem',
+                          fontWeight: 'bold',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}>
+                          RC-{idx + 1}
+                        </div>
+
+                        {showWiringLines && (
+                          <div style={{ position: 'absolute', top: '4px', right: '4px', width: '8px', height: '8px', borderRadius: '50%', background: currentTheme.dataCable }} />
+                        )}
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+
             </div>
-          )}
 
-        </div>
+          </div>
+        )}
 
-        {/* CAD Title Block (Bottom Footer of technical drawing) */}
+        {/* ------------------------------------------------------------------ */}
+        {/* VIEW 02: TOP VIEW (80mm Depth Section Cross-Section) */}
+        {/* ------------------------------------------------------------------ */}
+        {viewMode === 'top' && (
+          <div style={{ position: 'relative', width: '100%', maxWidth: '850px', margin: '40px auto' }}>
+            
+            {/* Top Dimension (Width) */}
+            {showDimensions && (
+              <div style={{ position: 'absolute', top: '-40px', left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ fontSize: '0.85rem', color: currentTheme.dimLine, fontWeight: 'bold' }}>
+                  2240mm (Width) | Enclosure Box: {totalWidthMm + 2}mm
+                </div>
+                <div style={{ width: '100%', borderBottom: `1.5px dashed ${currentTheme.dimLine}`, position: 'relative', marginTop: '4px' }}>
+                  <div style={{ position: 'absolute', left: 0, top: '-5px', width: '2px', height: '10px', background: currentTheme.dimLine }} />
+                  <div style={{ position: 'absolute', right: 0, top: '-5px', width: '2px', height: '10px', background: currentTheme.dimLine }} />
+                </div>
+              </div>
+            )}
+
+            {/* Depth Dimension (80mm) */}
+            {showDimensions && (
+              <div style={{ position: 'absolute', right: '-110px', top: 0, bottom: 0, width: '90px', display: 'flex', alignItems: 'center' }}>
+                <div style={{ height: '100%', borderRight: `1.5px dashed ${currentTheme.dimLine}`, position: 'relative', marginRight: '8px' }}>
+                  <div style={{ position: 'absolute', top: 0, right: '-5px', width: '10px', height: '2px', background: currentTheme.dimLine }} />
+                  <div style={{ position: 'absolute', bottom: 0, right: '-5px', width: '10px', height: '2px', background: currentTheme.dimLine }} />
+                </div>
+                <div style={{ fontSize: '0.8rem', color: currentTheme.dimLine, fontWeight: 'bold' }}>
+                  Depth: 80 mm
+                </div>
+              </div>
+            )}
+
+            {/* 80mm Top Cross Section CAD Render */}
+            <div style={{ 
+              width: '100%', 
+              height: '140px', 
+              border: `2px solid ${currentTheme.textMain}`, 
+              background: currentTheme.gridFill,
+              display: 'flex',
+              flexDirection: 'column',
+              position: 'relative',
+              boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
+              padding: '10px'
+            }}>
+              
+              {/* Layer 1: Front LED Modules (15mm profile) */}
+              <div style={{ height: '25px', width: '100%', display: 'flex', borderBottom: `1px solid ${currentTheme.textMain}`, background: 'rgba(56,189,248,0.15)', alignItems: 'center', justifyContent: 'center' }}>
+                {Array.from({ length: props.widthCols }).map((_, c) => (
+                  <div key={c} style={{ flex: 1, height: '100%', borderRight: `1px dashed ${currentTheme.textMain}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: currentTheme.textMain }}>
+                    Module {c + 1} ({unitWidthMm}mm)
+                  </div>
+                ))}
+              </div>
+
+              {/* Layer 2: Module Magnet Pins */}
+              <div style={{ height: '12px', width: '100%', display: 'flex', justifyContent: 'space-around', alignItems: 'center', background: 'transparent' }}>
+                {Array.from({ length: props.widthCols * 2 }).map((_, m) => (
+                  <div key={m} style={{ width: '8px', height: '8px', borderRadius: '50%', background: currentTheme.magnetColor, border: '1px solid #fff' }} title="Module Magnet Stud" />
+                ))}
+              </div>
+
+              {/* Layer 3: Laser Cut GI Sheet 2mm */}
+              <div style={{ height: '8px', width: '100%', background: currentTheme.giSheet, borderRadius: '1px' }} title="Laser Cut GI Sheet 2mm" />
+
+              {/* Layer 4: MS Tube 40x20mm Subframe */}
+              <div style={{ height: '35px', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 10px', marginTop: '6px' }}>
+                {Array.from({ length: props.widthCols + 1 }).map((_, t) => (
+                  <div key={t} style={{ width: '30px', height: '100%', border: `1.5px solid ${currentTheme.msTube40}`, background: 'rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', color: currentTheme.msTube40 }}>
+                    40x20
+                  </div>
+                ))}
+              </div>
+
+              {/* Layer 5: MS Tube 50x25mm Main Structure */}
+              <div style={{ height: '30px', width: '100%', display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginTop: '6px' }}>
+                {Array.from({ length: Math.ceil(props.widthCols / 2) }).map((_, s) => (
+                  <div key={s} style={{ width: '45px', height: '100%', border: `1.5px solid ${currentTheme.msTube50}`, background: 'rgba(236,72,153,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', color: currentTheme.msTube50, fontWeight: 'bold' }}>
+                    50x25 MS
+                  </div>
+                ))}
+              </div>
+
+            </div>
+
+            {/* Callout Legend Box */}
+            <div style={{ marginTop: '20px', display: 'flex', gap: '15px', flexWrap: 'wrap', fontSize: '0.75rem', color: currentTheme.textSub, background: currentTheme.gridFill, padding: '10px 15px', border: `1px solid ${currentTheme.gridBorder}`, borderRadius: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '12px', height: '12px', background: currentTheme.textMain, display: 'inline-block' }} /> 2.5 Pixel LED Module
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: currentTheme.magnetColor, display: 'inline-block' }} /> Module Magnet
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '12px', height: '6px', background: currentTheme.giSheet, display: 'inline-block' }} /> Laser Cut GI Sheet 2mm
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '12px', height: '12px', border: `1.5px solid ${currentTheme.msTube40}`, display: 'inline-block' }} /> MS Tube 40x20mm
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '12px', height: '12px', border: `1.5px solid ${currentTheme.msTube50}`, display: 'inline-block' }} /> MS Tube 50x25mm
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------------ */}
+        {/* VIEW 03: SIDE VIEW (80mm Depth Vertical Section) */}
+        {/* ------------------------------------------------------------------ */}
+        {viewMode === 'side' && (
+          <div style={{ position: 'relative', display: 'flex', gap: '40px', alignItems: 'center', margin: '40px auto' }}>
+            
+            {/* 80mm Side Section CAD Render Container */}
+            <div style={{ 
+              width: '180px', 
+              height: '380px', 
+              border: `2px solid ${currentTheme.textMain}`, 
+              background: currentTheme.gridFill,
+              display: 'flex',
+              position: 'relative',
+              boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
+              padding: '10px'
+            }}>
+              
+              {/* Layer 1: Front LED Modules (vertical stack) */}
+              <div style={{ width: '35px', height: '100%', display: 'flex', flexDirection: 'column', borderRight: `1px solid ${currentTheme.textMain}`, background: 'rgba(56,189,248,0.15)' }}>
+                {Array.from({ length: Math.min(props.heightRows, 10) }).map((_, r) => (
+                  <div key={r} style={{ flex: 1, borderBottom: `1px dashed ${currentTheme.textMain}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', color: currentTheme.textMain }}>
+                    Mod {r + 1}
+                  </div>
+                ))}
+              </div>
+
+              {/* Layer 2: Module Magnet Pins */}
+              <div style={{ width: '14px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-around', alignItems: 'center' }}>
+                {Array.from({ length: 12 }).map((_, m) => (
+                  <div key={m} style={{ width: '8px', height: '8px', borderRadius: '50%', background: currentTheme.magnetColor, border: '1px solid #fff' }} title="Module Magnet Stud" />
+                ))}
+              </div>
+
+              {/* Layer 3: Laser Cut GI Sheet 2mm */}
+              <div style={{ width: '8px', height: '100%', background: currentTheme.giSheet, borderRadius: '1px' }} title="Laser Cut GI Sheet 2mm" />
+
+              {/* Layer 4: MS Tube 40x20mm Subframe */}
+              <div style={{ width: '45px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-around', alignItems: 'center', padding: '10px 0' }}>
+                {Array.from({ length: 5 }).map((_, t) => (
+                  <div key={t} style={{ width: '100%', height: '35px', border: `1.5px solid ${currentTheme.msTube40}`, background: 'rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', color: currentTheme.msTube40 }}>
+                    40x20
+                  </div>
+                ))}
+              </div>
+
+              {/* Layer 5: MS Tube 50x25mm Main Structure */}
+              <div style={{ width: '50px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '5px 0' }}>
+                {Array.from({ length: 3 }).map((_, s) => (
+                  <div key={s} style={{ width: '100%', height: '60px', border: `1.5px solid ${currentTheme.msTube50}`, background: 'rgba(236,72,153,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', color: currentTheme.msTube50, fontWeight: 'bold' }}>
+                    50x25 MS
+                  </div>
+                ))}
+              </div>
+
+            </div>
+
+            {/* Side Dimension Callouts & Text Descriptions */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontSize: '0.8rem', color: currentTheme.textMain }}>
+              <div style={{ borderLeft: `3px solid ${currentTheme.textMain}`, paddingLeft: '10px' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>03: SIDE VIEW SPECIFICATIONS</div>
+                <div style={{ color: currentTheme.textSub, marginTop: '2px' }}>Overall Height: {totalHeightMm} mm ({props.totalHeightM} m)</div>
+                <div style={{ color: currentTheme.textSub }}>Enclosure Box Height: {totalHeightMm + 2} mm</div>
+                <div style={{ fontWeight: 'bold', color: currentTheme.dimLine }}>Overall Depth: 80 mm</div>
+              </div>
+
+              <div style={{ background: currentTheme.gridFill, border: `1px solid ${currentTheme.gridBorder}`, padding: '12px', borderRadius: '6px', width: '280px' }}>
+                <div style={{ fontWeight: 'bold', color: currentTheme.textMain, marginBottom: '6px' }}>Layer Stack Breakdown (80mm)</div>
+                <div style={{ fontSize: '0.75rem', color: currentTheme.textSub, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div>1. 2.5 Pixel LED Module (15mm)</div>
+                  <div>2. Module Magnets (Stud Mount)</div>
+                  <div>3. Laser Cut GI Sheet 2mm</div>
+                  <div>4. MS Tube 40x20mm Sub-Frame</div>
+                  <div>5. MS Tube 50x25mm Main Structure</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------------ */}
+        {/* CAD TITLE BLOCK (Same Official Title Block format) */}
+        {/* ------------------------------------------------------------------ */}
         <div style={{ 
           width: '100%', 
           maxWidth: '850px', 
@@ -468,16 +648,18 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
             <div style={{ fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '4px', color: currentTheme.textMain }}>HAWAII LED BLUEPRINT</div>
             <div style={{ color: currentTheme.textSub }}>Model: {props.brandName} ({props.sceneName})</div>
             <div style={{ color: currentTheme.textSub }}>Pitch: P{props.pitch} mm | Grid: {props.widthCols} Cols x {props.heightRows} Rows</div>
+            <div style={{ color: currentTheme.textSub }}>Box Outer Size: {totalWidthMm + 2} x {totalHeightMm + 2} x 80mm</div>
           </div>
           <div>
-            <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>ELECTRICAL & CONTROL</div>
+            <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>ELECTRICAL & STRUCTURE</div>
             <div style={{ color: currentTheme.textSub }}>Controller: {props.processor}</div>
             <div style={{ color: currentTheme.textSub }}>Power Supply: {props.powerSupply} ({props.powerMaxW}W Max)</div>
+            <div style={{ color: currentTheme.textSub }}>Frame: GI Sheet 2mm + MS Tube 40x20 & 50x25mm</div>
           </div>
           <div style={{ borderLeft: `1px solid ${currentTheme.gridBorder}`, paddingLeft: '12px' }}>
-            <div style={{ fontWeight: 'bold' }}>DRAWING NO: HW-{Date.now().toString().slice(-5)}</div>
-            <div style={{ color: currentTheme.textSub }}>Date: {new Date().toLocaleDateString()}</div>
-            <div style={{ color: currentTheme.textSub }}>Status: APPROVED</div>
+            <div style={{ fontWeight: 'bold' }}>DRAWING NO: 4618</div>
+            <div style={{ color: currentTheme.textSub }}>Date: 13/07/2026</div>
+            <div style={{ color: currentTheme.textSub }}>Status: APPROVED PRODUCTION SPEC</div>
           </div>
         </div>
 
