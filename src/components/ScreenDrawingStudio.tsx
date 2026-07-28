@@ -442,15 +442,16 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
         )}
 
         {/* ------------------------------------------------------------------ */}
-        {/* VIEW 02: TOP VIEW (Exact Architectural CAD Section - Staggered Callouts & GI Magnet Mounting) */}
+        {/* VIEW 02: TOP VIEW (Ultra-Slim 80mm Depth CAD Section & Stepped Callouts) */}
         {/* ------------------------------------------------------------------ */}
         {viewMode === 'top' && (
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '40px auto', width: '100%', maxWidth: '820px' }}>
             
-            <svg viewBox="0 0 760 430" style={{ width: '100%', height: 'auto', background: 'transparent' }}>
+            <svg viewBox="0 0 760 400" style={{ width: '100%', height: 'auto', background: 'transparent' }}>
               <defs>
-                <pattern id="msTubeHatchTop" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
-                  <line x1="0" y1="0" x2="0" y2="8" stroke={currentTheme.textSub} strokeWidth="1" opacity="0.6" />
+                {/* 50x25 MS Tube Cross Hatch / Grid Line Pattern */}
+                <pattern id="msTubeHatchTop" width="6" height="6" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+                  <line x1="0" y1="0" x2="0" y2="6" stroke={currentTheme.textMain} strokeWidth="0.8" opacity="0.5" />
                 </pattern>
                 
                 <marker id="arrowTop" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -458,42 +459,41 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                 </marker>
               </defs>
 
-              {/* TOP VIEW SECTION CONTAINER (X: 120 to 620 = 500px width) */}
+              {/* TOP VIEW SECTION CONTAINER (X: 120 to 620 = 500px width, Total Ultra-Slim Depth: 24px) */}
 
-              {/* 1. MS Tube 50x25mm (Rear Layer with Cross-Hatch fill) */}
-              <rect x="120" y="130" width="500" height="22" fill="url(#msTubeHatchTop)" stroke={currentTheme.textMain} strokeWidth="1.5" />
+              {/* 1. MS Tube 50x25mm (Rear Layer with Grid Lines - 8px depth) */}
+              <rect x="120" y="140" width="500" height="8" fill="url(#msTubeHatchTop)" stroke={currentTheme.textMain} strokeWidth="1" />
 
-              {/* 2. MS Tube 40x20mm (Subframe Layer) */}
-              <rect x="120" y="152" width="500" height="18" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1.5" />
-              {/* Vertical Tube Sub-frame Spacers */}
+              {/* 2. MS Tube 40x20mm (Subframe Layer - Clean Straight Line Open Tube - 6px depth) */}
+              <rect x="120" y="148" width="500" height="6" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1" />
+              {/* Straight Tube Spacer Lines */}
               {Array.from({ length: props.widthCols + 1 }).map((_, i) => (
-                <line key={i} x1={120 + i * (500 / props.widthCols)} y1="152" x2={120 + i * (500 / props.widthCols)} y2="170" stroke={currentTheme.textMain} strokeWidth="1" />
+                <line key={i} x1={120 + i * (500 / props.widthCols)} y1="148" x2={120 + i * (500 / props.widthCols)} y2="154" stroke={currentTheme.textMain} strokeWidth="0.8" />
               ))}
 
-              {/* 3. Laser Cut GI Sheet 2mm (Distinct Blue Line) */}
-              <rect x="120" y="170" width="500" height="4" fill="#2563eb" stroke="#38bdf8" strokeWidth="1" />
+              {/* 3. Laser Cut GI Sheet 2mm (Distinct Blue Line - 2px depth) */}
+              <rect x="120" y="154" width="500" height="2" fill="#2563eb" stroke="#38bdf8" strokeWidth="0.8" />
 
               {/* 4. Module Magnet Stud Pins (Mounted Flush to GI Sheet Side) */}
               {Array.from({ length: props.widthCols * 2 }).map((_, m) => {
                 const studX = 120 + (m + 0.5) * (500 / (props.widthCols * 2));
                 return (
-                  <g key={m} transform={`translate(${studX}, 174)`}>
+                  <g key={m} transform={`translate(${studX}, 156)`}>
                     {/* Magnet body attached to GI Sheet */}
-                    <rect x="-3.5" y="0" width="7" height="4" fill={currentTheme.magnetColor} stroke="#fff" strokeWidth="0.5" />
+                    <rect x="-2.5" y="0" width="5" height="3" fill={currentTheme.magnetColor} stroke="#fff" strokeWidth="0.4" />
                     {/* Stud pin extending into Module back */}
-                    <line x1="0" y1="4" x2="0" y2="10" stroke={currentTheme.textMain} strokeWidth="1.5" />
+                    <line x1="0" y1="3" x2="0" y2="6" stroke={currentTheme.textMain} strokeWidth="1" />
                   </g>
                 );
               })}
 
-              {/* 5. LED Modules (Front Facing Horizontal Array - Exact props.widthCols) */}
-              <rect x="120" y="184" width="500" height="16" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1.5" />
-              {/* Individual Module Seam Lines for EXACT props.widthCols */}
+              {/* 5. LED Modules (Front Facing Horizontal Array - Slim 8px depth) */}
+              <rect x="120" y="162" width="500" height="8" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1" />
+              {/* Individual Module Seam Lines & Column Index Labels */}
               {Array.from({ length: props.widthCols }).map((_, c) => (
                 <g key={c}>
-                  <line x1={120 + c * (500 / props.widthCols)} y1="184" x2={120 + c * (500 / props.widthCols)} y2="200" stroke={currentTheme.textMain} strokeWidth="1.5" />
-                  {/* Module Index Label */}
-                  <text x={120 + (c + 0.5) * (500 / props.widthCols)} y="196" fill={currentTheme.textMain} fontSize="8.5" textAnchor="middle" fontWeight="bold">
+                  <line x1={120 + c * (500 / props.widthCols)} y1="162" x2={120 + c * (500 / props.widthCols)} y2="170" stroke={currentTheme.textMain} strokeWidth="1" />
+                  <text x={120 + (c + 0.5) * (500 / props.widthCols)} y="180" fill={currentTheme.textMain} fontSize="8" textAnchor="middle" fontWeight="bold">
                     C{c + 1}
                   </text>
                 </g>
@@ -502,56 +502,56 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
               {/* ------------------------------------------------------------ */}
               {/* GREEN OVERALL WIDTH DIMENSION LINE (Above Section) */}
               {/* ------------------------------------------------------------ */}
-              <line x1="120" y1="75" x2="620" y2="75" stroke="#22c55e" strokeWidth="1.5" />
-              <line x1="120" y1="65" x2="120" y2="85" stroke="#22c55e" strokeWidth="1.5" />
-              <line x1="620" y1="65" x2="620" y2="85" stroke="#22c55e" strokeWidth="1.5" />
-              <line x1="113" y1="82" x2="127" y2="68" stroke="#22c55e" strokeWidth="2" />
-              <line x1="613" y1="82" x2="627" y2="68" stroke="#22c55e" strokeWidth="2" />
+              <line x1="120" y1="90" x2="620" y2="90" stroke="#22c55e" strokeWidth="1.5" />
+              <line x1="120" y1="80" x2="120" y2="100" stroke="#22c55e" strokeWidth="1.5" />
+              <line x1="620" y1="80" x2="620" y2="100" stroke="#22c55e" strokeWidth="1.5" />
+              <line x1="113" y1="97" x2="127" y2="83" stroke="#22c55e" strokeWidth="2" />
+              <line x1="613" y1="97" x2="627" y2="83" stroke="#22c55e" strokeWidth="2" />
               
-              <text x="370" y="65" fill="#22c55e" fontSize="16" fontWeight="bold" textAnchor="middle">
+              <text x="370" y="80" fill="#22c55e" fontSize="15" fontWeight="bold" textAnchor="middle">
                 {totalWidthMm} mm ({props.totalWidthM} m)
               </text>
 
               {/* ------------------------------------------------------------ */}
               {/* THICKNESS / DEPTH MEASUREMENT LINE (80 mm Depth Callout) */}
               {/* ------------------------------------------------------------ */}
-              <line x1="640" y1="130" x2="640" y2="200" stroke="#38bdf8" strokeWidth="1.5" />
-              <line x1="632" y1="130" x2="648" y2="130" stroke="#38bdf8" strokeWidth="1.5" />
-              <line x1="632" y1="200" x2="648" y2="200" stroke="#38bdf8" strokeWidth="1.5" />
-              <text x="655" y="168" fill="#38bdf8" fontSize="13" fontWeight="bold" textAnchor="start">
-                80 mm (Depth)
+              <line x1="635" y1="140" x2="635" y2="170" stroke="#38bdf8" strokeWidth="1.5" />
+              <line x1="628" y1="140" x2="642" y2="140" stroke="#38bdf8" strokeWidth="1.5" />
+              <line x1="628" y1="170" x2="642" y2="170" stroke="#38bdf8" strokeWidth="1.5" />
+              <text x="648" y="158" fill="#38bdf8" fontSize="12" fontWeight="bold" textAnchor="start">
+                80 mm Depth
               </text>
 
               {/* ------------------------------------------------------------ */}
-              {/* STEPPED DOWN / STAGGERED LEADER CALLOUTS (Zero Overlapping Text) */}
+              {/* STEPPED DOWN / STAGGERED LEADER CALLOUTS */}
               {/* ------------------------------------------------------------ */}
 
-              {/* Stepped Leader 1: LED Module (Step 1 Y=240) */}
-              <line x1="170" y1="240" x2="170" y2="202" stroke={currentTheme.textMain} strokeWidth="1.2" markerEnd="url(#arrowTop)" />
-              <text x="170" y="258" textAnchor="middle" fill={currentTheme.textMain} fontSize="13.5" fontWeight="500">
+              {/* Stepped Leader 1: LED Module (Step 1 Y=220) */}
+              <line x1="160" y1="215" x2="160" y2="171" stroke={currentTheme.textMain} strokeWidth="1" markerEnd="url(#arrowTop)" />
+              <text x="160" y="232" textAnchor="middle" fill={currentTheme.textMain} fontSize="12.5" fontWeight="500">
                 P{props.pitch} LED Module ({unitWidthMm}mm)
               </text>
 
-              {/* Stepped Leader 2: GI Sheet 2mm (Step 2 Y=280) */}
-              <line x1="310" y1="280" x2="310" y2="176" stroke={currentTheme.textMain} strokeWidth="1.2" markerEnd="url(#arrowTop)" />
-              <text x="310" y="298" textAnchor="middle" fill={currentTheme.textMain} fontSize="13.5" fontWeight="500">
+              {/* Stepped Leader 2: GI Sheet 2mm (Step 2 Y=260) */}
+              <line x1="300" y1="255" x2="300" y2="157" stroke={currentTheme.textMain} strokeWidth="1" markerEnd="url(#arrowTop)" />
+              <text x="300" y="272" textAnchor="middle" fill={currentTheme.textMain} fontSize="12.5" fontWeight="500">
                 Laser Cut GI Sheet 2mm
               </text>
 
-              {/* Stepped Leader 3: MS Tube 40x20mm (Step 3 Y=320) */}
-              <line x1="450" y1="320" x2="450" y2="168" stroke={currentTheme.textMain} strokeWidth="1.2" markerEnd="url(#arrowTop)" />
-              <text x="450" y="338" textAnchor="middle" fill={currentTheme.textMain} fontSize="13.5" fontWeight="500">
+              {/* Stepped Leader 3: MS Tube 40x20mm (Step 3 Y=300) */}
+              <line x1="440" y1="295" x2="440" y2="152" stroke={currentTheme.textMain} strokeWidth="1" markerEnd="url(#arrowTop)" />
+              <text x="440" y="312" textAnchor="middle" fill={currentTheme.textMain} fontSize="12.5" fontWeight="500">
                 MS Tube 40x20mm
               </text>
 
-              {/* Stepped Leader 4: MS Tube 50x25mm (Step 4 Y=360) */}
-              <line x1="570" y1="360" x2="570" y2="154" stroke={currentTheme.textMain} strokeWidth="1.2" markerEnd="url(#arrowTop)" />
-              <text x="570" y="378" textAnchor="middle" fill={currentTheme.textMain} fontSize="13.5" fontWeight="500">
+              {/* Stepped Leader 4: MS Tube 50x25mm (Step 4 Y=340) */}
+              <line x1="570" y1="335" x2="570" y2="145" stroke={currentTheme.textMain} strokeWidth="1" markerEnd="url(#arrowTop)" />
+              <text x="570" y="352" textAnchor="middle" fill={currentTheme.textMain} fontSize="12.5" fontWeight="500">
                 MS Tube 50x25mm
               </text>
 
               {/* Module Count Header */}
-              <text x="370" y="415" fill={currentTheme.textSub} fontSize="13" textAnchor="middle" fontWeight="bold">
+              <text x="370" y="385" fill={currentTheme.textSub} fontSize="12" textAnchor="middle" fontWeight="bold">
                 02: TOP VIEW - TOTAL {props.widthCols} MODULE COLUMNS ({totalWidthMm} mm)
               </text>
             </svg>
@@ -560,15 +560,15 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
         )}
 
         {/* ------------------------------------------------------------------ */}
-        {/* VIEW 03: SIDE VIEW (Exact Architectural CAD Section - Dynamic Height Modules) */}
+        {/* VIEW 03: SIDE VIEW (Ultra-Slim 80mm Depth CAD Section) */}
         {/* ------------------------------------------------------------------ */}
         {viewMode === 'side' && (
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '40px auto', width: '100%', maxWidth: '750px' }}>
             
             <svg viewBox="0 0 700 480" style={{ width: '100%', height: 'auto', background: 'transparent' }}>
               <defs>
-                <pattern id="msTubeHatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
-                  <line x1="0" y1="0" x2="0" y2="8" stroke={currentTheme.textSub} strokeWidth="1" opacity="0.6" />
+                <pattern id="msTubeHatch" width="6" height="6" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+                  <line x1="0" y1="0" x2="0" y2="6" stroke={currentTheme.textMain} strokeWidth="0.8" opacity="0.5" />
                 </pattern>
                 
                 <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -576,96 +576,94 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                 </marker>
               </defs>
 
-              {/* SIDE VIEW SECTION CONTAINER (Slim proportional CAD thickness) */}
-              {/* Y: 30 to 430 = 400px total height */}
+              {/* SIDE VIEW SECTION CONTAINER (Ultra-Slim 24px Depth Stack) */}
 
-              {/* 1. MS Tube 50x25mm (Rear Layer with Cross-Hatch fill - Slim 22px width) */}
-              <rect x="430" y="30" width="22" height="400" fill="url(#msTubeHatch)" stroke={currentTheme.textMain} strokeWidth="1.5" />
+              {/* 1. MS Tube 50x25mm (Rear Layer with Grid Hatch - 8px width) */}
+              <rect x="440" y="30" width="8" height="400" fill="url(#msTubeHatch)" stroke={currentTheme.textMain} strokeWidth="1" />
 
-              {/* 2. MS Tube 40x20mm (Subframe Layer - Slim 16px width) */}
-              <rect x="452" y="30" width="16" height="400" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1.5" />
-              {/* Horizontal Tube divisions */}
+              {/* 2. MS Tube 40x20mm (Subframe Layer - Clean Straight Line - 6px width) */}
+              <rect x="448" y="30" width="6" height="400" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1" />
+              {/* Horizontal Tube Spacer Lines */}
               {Array.from({ length: Math.min(props.heightRows + 1, 10) }).map((_, i) => (
-                <line key={i} x1="452" y1={30 + i * (400 / Math.min(props.heightRows, 9))} x2="468" y2={30 + i * (400 / Math.min(props.heightRows, 9))} stroke={currentTheme.textMain} strokeWidth="1" />
+                <line key={i} x1="448" y1={30 + i * (400 / Math.min(props.heightRows, 9))} x2="454" y2={30 + i * (400 / Math.min(props.heightRows, 9))} stroke={currentTheme.textMain} strokeWidth="0.8" />
               ))}
 
-              {/* 3. Laser Cut GI Sheet 2mm (Distinct Blue Line - 3px) */}
-              <rect x="468" y="30" width="3" fill="#2563eb" height="400" stroke="#38bdf8" strokeWidth="1" />
+              {/* 3. Laser Cut GI Sheet 2mm (Distinct Blue Line - 2px width) */}
+              <rect x="454" y="30" width="2" fill="#2563eb" height="400" stroke="#38bdf8" strokeWidth="0.8" />
 
               {/* 4. Module Magnet Stud Pins (Mounted Flush to GI Sheet Side) */}
               {Array.from({ length: props.heightRows * 2 }).map((_, m) => {
                 const studY = 30 + (m + 0.5) * (400 / (props.heightRows * 2));
                 return (
-                  <g key={m} transform={`translate(471, ${studY})`}>
+                  <g key={m} transform={`translate(456, ${studY})`}>
                     {/* Magnet Body flush against GI Sheet */}
-                    <rect x="0" y="-2.5" width="4" height="5" fill={currentTheme.magnetColor} stroke="#fff" strokeWidth="0.5" />
+                    <rect x="0" y="-2" width="3" height="4" fill={currentTheme.magnetColor} stroke="#fff" strokeWidth="0.4" />
                     {/* Stud pin extending into Module back */}
-                    <line x1="4" y1="0" x2="9" y2="0" stroke={currentTheme.textMain} strokeWidth="1.2" />
+                    <line x1="3" y1="0" x2="6" y2="0" stroke={currentTheme.textMain} strokeWidth="1" />
                   </g>
                 );
               })}
 
-              {/* 5. LED Modules (Front Facing Vertical Array - EXACT props.heightRows) */}
-              <rect x="480" y="30" width="14" height="400" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1.5" />
-              {/* Individual Module Seams & Labels for EXACT props.heightRows */}
+              {/* 5. LED Modules (Front Facing Vertical Array - 8px width) */}
+              <rect x="462" y="30" width="8" height="400" fill={currentTheme.gridFill} stroke={currentTheme.textMain} strokeWidth="1" />
+              {/* Individual Module Seam Lines */}
               {Array.from({ length: props.heightRows }).map((_, r) => {
-                const modH = 400 / props.heightRows;
-                const modY = 30 + r * modH;
+                const modY = 30 + r * (400 / props.heightRows);
                 return (
                   <g key={r}>
-                    <line x1="480" y1={modY} x2="494" y2={modY} stroke={currentTheme.textMain} strokeWidth="1.5" />
+                    <line x1="462" y1={modY} x2="470" y2={modY} stroke={currentTheme.textMain} strokeWidth="1" />
                   </g>
                 );
               })}
 
               {/* ------------------------------------------------------------ */}
-              {/* LEADER LINES & TEXT ANNOTATIONS (Identical to drawing image) */}
+              {/* LEADER LINES & TEXT ANNOTATIONS */}
               {/* ------------------------------------------------------------ */}
 
               {/* Leader Line 1: LED Module */}
-              <line x1="390" y1="100" x2="487" y2="100" stroke={currentTheme.textMain} strokeWidth="1.2" markerEnd="url(#arrow)" />
-              <text x="380" y="104" textAnchor="end" fill={currentTheme.textMain} fontSize="16" fontWeight="500">
+              <line x1="390" y1="100" x2="465" y2="100" stroke={currentTheme.textMain} strokeWidth="1" markerEnd="url(#arrow)" />
+              <text x="380" y="104" textAnchor="end" fill={currentTheme.textMain} fontSize="15" fontWeight="500">
                 P{props.pitch} Pixel LED Module
               </text>
 
               {/* Leader Line 2: GI Sheet 2mm */}
-              <line x1="390" y1="180" x2="470" y2="180" stroke={currentTheme.textMain} strokeWidth="1.2" markerEnd="url(#arrow)" />
-              <text x="380" y="184" textAnchor="end" fill={currentTheme.textMain} fontSize="16" fontWeight="500">
+              <line x1="390" y1="180" x2="455" y2="180" stroke={currentTheme.textMain} strokeWidth="1" markerEnd="url(#arrow)" />
+              <text x="380" y="184" textAnchor="end" fill={currentTheme.textMain} fontSize="15" fontWeight="500">
                 Laser Cut GI Sheet 2mm
               </text>
 
               {/* Leader Line 3: MS Tube 40x20mm */}
-              <line x1="390" y1="260" x2="460" y2="260" stroke={currentTheme.textMain} strokeWidth="1.2" markerEnd="url(#arrow)" />
-              <text x="380" y="264" textAnchor="end" fill={currentTheme.textMain} fontSize="16" fontWeight="500">
+              <line x1="390" y1="260" x2="450" y2="260" stroke={currentTheme.textMain} strokeWidth="1" markerEnd="url(#arrow)" />
+              <text x="380" y="264" textAnchor="end" fill={currentTheme.textMain} fontSize="15" fontWeight="500">
                 MS Tube 40x20mm
               </text>
 
               {/* Leader Line 4: MS Tube 50x25mm */}
-              <line x1="390" y1="340" x2="441" y2="340" stroke={currentTheme.textMain} strokeWidth="1.2" markerEnd="url(#arrow)" />
-              <text x="380" y="344" textAnchor="end" fill={currentTheme.textMain} fontSize="16" fontWeight="500">
+              <line x1="390" y1="340" x2="442" y2="340" stroke={currentTheme.textMain} strokeWidth="1" markerEnd="url(#arrow)" />
+              <text x="380" y="344" textAnchor="end" fill={currentTheme.textMain} fontSize="15" fontWeight="500">
                 MS Tube 50x25mm
               </text>
 
               {/* ------------------------------------------------------------ */}
               {/* GREEN OVERALL HEIGHT DIMENSION LINE (Right Side) */}
               {/* ------------------------------------------------------------ */}
-              <line x1="525" y1="30" x2="525" y2="430" stroke="#22c55e" strokeWidth="1.5" />
-              <line x1="515" y1="30" x2="535" y2="30" stroke="#22c55e" strokeWidth="1.5" />
-              <line x1="515" y1="430" x2="535" y2="430" stroke="#22c55e" strokeWidth="1.5" />
-              <line x1="518" y1="37" x2="532" y2="23" stroke="#22c55e" strokeWidth="2" />
-              <line x1="518" y1="437" x2="532" y2="423" stroke="#22c55e" strokeWidth="2" />
+              <line x1="495" y1="30" x2="495" y2="430" stroke="#22c55e" strokeWidth="1.5" />
+              <line x1="487" y1="30" x2="503" y2="30" stroke="#22c55e" strokeWidth="1.5" />
+              <line x1="487" y1="430" x2="503" y2="430" stroke="#22c55e" strokeWidth="1.5" />
+              <line x1="489" y1="37" x2="501" y2="23" stroke="#22c55e" strokeWidth="2" />
+              <line x1="489" y1="437" x2="501" y2="423" stroke="#22c55e" strokeWidth="2" />
 
-              <text x="540" y="230" fill="#22c55e" fontSize="16" fontWeight="bold" transform="rotate(90 540 230)" textAnchor="middle">
+              <text x="512" y="230" fill="#22c55e" fontSize="15" fontWeight="bold" transform="rotate(90 512 230)" textAnchor="middle">
                 {totalHeightMm} mm (Exact {props.heightRows} Modules)
               </text>
 
               {/* ------------------------------------------------------------ */}
               {/* THICKNESS / DEPTH MEASUREMENT LINE (80 mm Depth Callout) */}
               {/* ------------------------------------------------------------ */}
-              <line x1="430" y1="450" x2="494" y2="450" stroke="#38bdf8" strokeWidth="1.5" />
-              <line x1="430" y1="442" x2="430" y2="458" stroke="#38bdf8" strokeWidth="1.5" />
-              <line x1="494" y1="442" x2="494" y2="458" stroke="#38bdf8" strokeWidth="1.5" />
-              <text x="462" y="470" fill="#38bdf8" fontSize="13" fontWeight="bold" textAnchor="middle">
+              <line x1="440" y1="450" x2="470" y2="450" stroke="#38bdf8" strokeWidth="1.5" />
+              <line x1="440" y1="443" x2="440" y2="457" stroke="#38bdf8" strokeWidth="1.5" />
+              <line x1="470" y1="443" x2="470" y2="457" stroke="#38bdf8" strokeWidth="1.5" />
+              <text x="455" y="470" fill="#38bdf8" fontSize="12" fontWeight="bold" textAnchor="middle">
                 80 mm Depth
               </text>
 
