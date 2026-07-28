@@ -2,7 +2,6 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 export interface PDFExportOptions {
-  drawingElementId: string;
   filename?: string;
   projectInfo: {
     brandName: string;
@@ -19,16 +18,13 @@ export interface PDFExportOptions {
     powerSupply: string;
     totalWeightKg: string;
     powerMaxW: string;
+    receivingCardQty?: number;
   };
-}
-
-export interface MultiViewPDFExportOptions extends PDFExportOptions {
-  captureAllViews: (capturePage: (viewTitle: string, pageNum: number, totalPages: number) => Promise<void>) => Promise<void>;
 }
 
 export async function exportMultiPageTechnicalDrawingPDF(
   options: PDFExportOptions,
-  viewCaptures: { title: string; element: HTMLElement }[]
+  viewElementIds: { title: string; elementId: string }[]
 ): Promise<void> {
   const { filename = 'hawaii-led-technical-drawing.pdf', projectInfo } = options;
 
@@ -42,15 +38,25 @@ export async function exportMultiPageTechnicalDrawingPDF(
     const pdfWidth = pdf.internal.pageSize.getWidth(); // 297 mm
     const pdfHeight = pdf.internal.pageSize.getHeight(); // 210 mm
 
-    for (let pageIdx = 0; pageIdx < viewCaptures.length; pageIdx++) {
-      const view = viewCaptures[pageIdx];
+    let validPagesCount = 0;
 
-      if (pageIdx > 0) {
+    for (let pageIdx = 0; pageIdx < viewElementIds.length; pageIdx++) {
+      const view = viewElementIds[pageIdx];
+      const element = document.getElementById(view.elementId);
+
+      if (!element) {
+        console.warn(`Export element #${view.elementId} not found, skipping.`);
+        continue;
+      }
+
+      if (validPagesCount > 0) {
         pdf.addPage('a4', 'landscape');
       }
 
+      validPagesCount++;
+
       // Render view element to high resolution canvas
-      const canvas = await html2canvas(view.element, {
+      const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#0f172a',
@@ -78,7 +84,7 @@ export async function exportMultiPageTechnicalDrawingPDF(
       pdf.setFontSize(8.5);
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(148, 163, 184);
-      pdf.text(`Official Technical Spec Sheet | Sheet ${pageIdx + 1} of ${viewCaptures.length} | Generated: ${new Date().toLocaleDateString()}`, 12, 19);
+      pdf.text(`Official Technical Spec Sheet | Sheet ${validPagesCount} of ${viewElementIds.length} | Generated: ${new Date().toLocaleDateString()}`, 12, 19);
 
       // 2. Add Captured View Image
       const imgX = 10;
@@ -143,8 +149,8 @@ export async function exportMultiPageTechnicalDrawingPDF(
       pdf.text(`Video Controller: ${projectInfo.processor}`, 14 + col1W, tbY + 12);
       pdf.text(`Power Supplies: ${projectInfo.powerSupply}`, 14 + col1W, tbY + 18);
       pdf.text(`Max Load: ${projectInfo.powerMaxW} W (~ ${(Number(projectInfo.powerMaxW) / 230).toFixed(1)} A) | Weight: ${projectInfo.totalWeightKg} kg`, 14 + col1W, tbY + 24);
-      pdf.text(`Structure Depth: 80 mm | GI Sheet 2mm + MS Tube 40x20 & 50x25mm`, 14 + col1W, tbY + 30);
-      pdf.text(`Magnet Mounts: 4x Per Module | Cable: Shielded Cat6`, 14 + col1W, tbY + 36);
+      pdf.text(`Receiving Cards: ${projectInfo.receivingCardQty || 1} Cards Total | Load limit: 80%`, 14 + col1W, tbY + 30);
+      pdf.text(`Structure: 80mm Depth | GI Sheet 2mm + MS Tube 40x20 & 50x25mm`, 14 + col1W, tbY + 36);
 
       // Column 3: Approval / Sign-off Title Block
       pdf.setFont('helvetica', 'bold');
@@ -156,7 +162,7 @@ export async function exportMultiPageTechnicalDrawingPDF(
       pdf.setTextColor(148, 163, 184);
       pdf.text('DRAWN BY: HAWAII LED CAD SYSTEM', 14 + col1W + col2W, tbY + 14);
       pdf.text('APPROVED BY: ___________________', 14 + col1W + col2W, tbY + 22);
-      pdf.text(`SHEET: ${pageIdx + 1} OF ${viewCaptures.length} | SCALE: N.T.S`, 14 + col1W + col2W, tbY + 30);
+      pdf.text(`SHEET: ${validPagesCount} OF ${viewElementIds.length} | SCALE: N.T.S`, 14 + col1W + col2W, tbY + 30);
       pdf.text('STATUS: FINAL PRODUCTION SPEC', 14 + col1W + col2W, tbY + 36);
     }
 
