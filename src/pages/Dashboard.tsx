@@ -280,14 +280,15 @@ const Dashboard: React.FC = () => {
     { id: 'b4', item: powerSupplyLabel, model: powerSupplyModel, qty: powerSupplyQty, spec: powerSupplySpec },
     { id: 'b5', item: 'Module 5V Power Cable', model: '5V DC Power Cable Splitter', qty: Math.ceil(totalUnits / 2), spec: '1 DC Cable per 2 LED Modules' },
     { id: 'b6', item: 'Receiving Card Power Cable', model: '5V DC Receiver Power Cable', qty: receivingCardQty, spec: '1 Power Cable per Receiving Card' },
-    { id: 'b7', item: 'Cat6 Signal Cable', model: 'Cat6 Looping Data Cable', qty: totalUnits, spec: '1 Cable per Module / Receiver Loop' },
-    { id: 'b8', item: 'PSU Loop AC Power Cable', model: '3-Core 2.5mm² Power Cable', qty: `${Math.ceil((powerSupplyQty * 1.5) + parseFloat(totalWidth))} m`, spec: 'Heavy Duty AC Mains Line (Meters)' },
-    { id: 'b9', item: 'Laser Cut GI Sheet', model: 'GI Sheet 2mm Thickness', qty: 1, spec: `${(Math.round(widthCols * unitW * 1000) + 2)}x${(Math.round(heightRows * unitH * 1000) + 2)}mm (${totalArea} m²)` },
-    { id: 'b10', item: 'MS Tube 40x20mm', model: 'Mild Steel Tubing Sub-Frame', qty: `${Math.ceil((widthCols + 1) * parseFloat(totalHeight))} m`, spec: '20mm Depth Structural Sub-Assembly' },
-    { id: 'b11', item: 'MS Tube 50x25mm', model: 'Mild Steel Main Tube Frame', qty: `${Math.ceil((widthCols / 2 + 1) * parseFloat(totalHeight))} m`, spec: '25mm Depth Main Structure (80mm Total)' },
-    { id: 'b12', item: 'Module Magnets', model: 'M4 Magnet Stud Pillars', qty: totalUnits * 6, spec: '6 Magnets per LED Module' },
-    { id: 'b13', item: 'Total Weight', model: 'Calculated Structural Load', qty: 1, spec: `~ ${totalWeight} kg` },
-    { id: 'b14', item: 'Power Consumption', model: 'Maximum Load @ 230V', qty: 1, spec: `${powerMax}W (Max) / ~ ${ampsMax}A` },
+    { id: 'b7', item: 'Cat6 Signal Cable (RC Loop)', model: 'Cat6 Ethernet Patch Cord', qty: receivingCardQty, spec: '1 Cat6 Cable per Receiving Card (RC to RC Loop)' },
+    { id: 'b8', item: '16-Pin Data Flat Cable', model: 'HUB75 Data Ribbon Cable', qty: totalUnits, spec: '1 Flat Cable per LED Module (Module Signal Feed)' },
+    { id: 'b9', item: 'PSU Loop AC Power Cable', model: '3-Core 2.5mm² Power Cable', qty: `${powerSupplyQty} m`, spec: '1 Meter per Power Supply (AC Mains Line)' },
+    { id: 'b10', item: 'Laser Cut GI Sheet', model: 'GI Sheet 2mm Thickness', qty: 1, spec: `${(Math.round(widthCols * unitW * 1000) + 2)}x${(Math.round(heightRows * unitH * 1000) + 2)}mm (${totalArea} m²)` },
+    { id: 'b11', item: 'MS Tube 40x20mm', model: 'Mild Steel Tubing Sub-Frame', qty: `${Math.ceil((widthCols + 1) * parseFloat(totalHeight))} m`, spec: '20mm Depth Structural Sub-Assembly' },
+    { id: 'b12', item: 'MS Tube 50x25mm', model: 'Mild Steel Main Tube Frame', qty: `${Math.ceil((widthCols / 2 + 1) * parseFloat(totalHeight))} m`, spec: '25mm Depth Main Structure (80mm Total)' },
+    { id: 'b13', item: 'Module Magnets', model: 'M4 Magnet Stud Pillars', qty: totalUnits * 6, spec: '6 Magnets per LED Module' },
+    { id: 'b14', item: 'Total Weight', model: 'Calculated Structural Load', qty: 1, spec: `~ ${totalWeight} kg` },
+    { id: 'b15', item: 'Power Consumption', model: 'Maximum Load @ 230V', qty: 1, spec: `${powerMax}W (Max) / ~ ${ampsMax}A` },
   ];
 
   const portsRequired = Math.ceil(totalPixels / 650000);
