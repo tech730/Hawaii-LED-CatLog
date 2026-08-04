@@ -561,23 +561,46 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
     );
   };
 
-  // 05: POWER DISTRIBUTION DIAGRAM (COLOR-CODED ZONES)
+  // 05: POWER DISTRIBUTION DIAGRAM (COLOR-CODED 2D PSU ZONES - MAX 3 COLS WIDE x MAX 6 ROWS HIGH REACH)
   const renderPowerWiringContent = (theme: typeof currentTheme) => {
-    const totalPSU = props.powerSupplyQty || Math.max(1, Math.ceil(props.totalUnits / (props.isRental ? 16 : 10)));
     const ampsMax = (Number(props.powerMaxW) / 230).toFixed(1);
 
-    const psuCenterIndices = new Set<number>();
-    const psuIndexMap = new Map<number, number>();
+    // Build PSU 2D Zones based on physical cable reach (Max 3 cols wide = 960mm, Max 6 rows high = 960mm, Max 10 mods per 60A PSU)
+    const psuZoneMap = new Map<number, { psuNum: number; zoneIdx: number; isCenter: boolean }>();
+    const psuColsCount = Math.ceil(props.widthCols / 3);
+    
+    let psuCounter = 1;
 
-    const modsPerPSU = props.totalUnits / totalPSU;
+    for (let cBlock = 0; cBlock < psuColsCount; cBlock++) {
+      const startCol = cBlock * 3;
+      const blockW = Math.min(3, props.widthCols - startCol);
+      const maxRowsForBlock = Math.min(6, Math.floor(10 / blockW));
+      const psuRowsCount = Math.ceil(props.heightRows / maxRowsForBlock);
 
-    for (let i = 0; i < totalPSU; i++) {
-      const idx = Math.min(props.totalUnits - 1, Math.floor((i + 0.5) * modsPerPSU));
-      if (!psuCenterIndices.has(idx)) {
-        psuCenterIndices.add(idx);
-        psuIndexMap.set(idx, i + 1);
+      for (let rBlock = 0; rBlock < psuRowsCount; rBlock++) {
+        const startRow = rBlock * maxRowsForBlock;
+        const blockH = Math.min(maxRowsForBlock, props.heightRows - startRow);
+        const psuNum = psuCounter++;
+
+        // Center module in this 2D PSU block
+        const centerColInBlock = Math.floor(blockW / 2);
+        const centerRowInBlock = Math.floor(blockH / 2);
+        const centerIdx = (startRow + centerRowInBlock) * props.widthCols + (startCol + centerColInBlock);
+
+        for (let r = 0; r < blockH; r++) {
+          for (let c = 0; c < blockW; c++) {
+            const idx = (startRow + r) * props.widthCols + (startCol + c);
+            psuZoneMap.set(idx, {
+              psuNum,
+              zoneIdx: psuNum - 1,
+              isCenter: idx === centerIdx
+            });
+          }
+        }
       }
     }
+
+    const totalPSU = psuCounter - 1;
 
     // Distinct Zone Palette for Power Supply Coverage Areas
     const powerZoneColors = [
@@ -595,7 +618,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
       <div style={{ position: 'relative', width: '100%', maxWidth: '850px', margin: '30px auto' }}>
         {/* Header Banner */}
         <div style={{ textAlign: 'center', marginBottom: '15px', color: theme.powerCable, fontWeight: 'bold', fontSize: '0.82rem' }}>
-          05: POWER DISTRIBUTION DIAGRAM | 60A 5V DC PSUs: {totalPSU} COLOR ZONES | AC MAINS LOAD: ~ {ampsMax}A @ 230V ({props.powerMaxW}W MAX)
+          05: POWER DISTRIBUTION DIAGRAM | 60A 5V DC PSUs (MAX 3 COLS x 6 ROWS REACH): {totalPSU} COLOR ZONES | AC MAINS LOAD: ~ {ampsMax}A @ 230V ({props.powerMaxW}W MAX)
         </div>
 
         {/* Screen Module Rear Grid */}
@@ -613,12 +636,8 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
             const col = (idx % props.widthCols) + 1;
             const row = Math.floor(idx / props.widthCols) + 1;
 
-            // Determine PSU Zone for this module
-            const psuZoneIdx = Math.min(totalPSU - 1, Math.floor(idx / modsPerPSU));
-            const zoneColor = powerZoneColors[psuZoneIdx % powerZoneColors.length];
-
-            const isPSUCenter = psuCenterIndices.has(idx);
-            const psuNum = psuIndexMap.get(idx);
+            const psuInfo = psuZoneMap.get(idx) || { psuNum: 1, zoneIdx: 0, isCenter: false };
+            const zoneColor = powerZoneColors[psuInfo.zoneIdx % powerZoneColors.length];
 
             return (
               <div 
@@ -636,7 +655,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                   overflow: 'hidden'
                 }}
               >
-                {isPSUCenter ? (
+                {psuInfo.isCenter ? (
                   <div style={{ 
                     width: '90%', 
                     height: '65%', 
@@ -652,7 +671,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                     boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
                     border: '1.5px solid #fff'
                   }}>
-                    <span>PSU-{psuNum}</span>
+                    <span>PSU-{psuInfo.psuNum}</span>
                     <span style={{ fontSize: '0.48rem', opacity: 0.95 }}>60A (5V DC)</span>
                   </div>
                 ) : (

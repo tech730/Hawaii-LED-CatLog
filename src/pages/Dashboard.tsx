@@ -222,8 +222,16 @@ const Dashboard: React.FC = () => {
     powerSupplyModel = activePower.name;
     powerSupplySpec = 'AC100~240V (50/60Hz)';
   } else {
-    // totalUnits = number of 320x160 modules
-    powerSupplyQty = isOutdoor ? Math.ceil(totalUnits / 8) : Math.ceil(totalUnits / 10);
+    // 320x160 modules physical reach: Max 3 cols wide (320mm x 3 = 960mm max), Max 6 rows high (160mm x 6 = 960mm max), Max 10 modules per 60A PSU
+    let qty = 0;
+    const psuColsCount = Math.ceil(widthCols / 3);
+    for (let cBlock = 0; cBlock < psuColsCount; cBlock++) {
+      const blockW = Math.min(3, widthCols - cBlock * 3);
+      const maxRowsForBlock = Math.min(6, Math.floor(10 / blockW));
+      const psuRowsInBlock = Math.ceil(heightRows / maxRowsForBlock);
+      qty += psuRowsInBlock;
+    }
+    powerSupplyQty = Math.max(1, qty);
   }
 
   // Resolution & Control Ports
