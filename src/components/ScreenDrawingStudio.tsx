@@ -26,6 +26,7 @@ export interface ScreenDrawingProps {
   receivingCardModel?: string;
   receivingCardMaxW?: number;
   receivingCardMaxH?: number;
+  powerSupplyQty?: number;
 }
 
 type ViewMode = 'front' | 'top' | 'side' | 'data' | 'power';
@@ -543,23 +544,17 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
 
   // 05: POWER DISTRIBUTION DIAGRAM
   const renderPowerWiringContent = (theme: typeof currentTheme) => {
-    const maxModulesPerPSU = 9;
-    const totalPSU = Math.max(1, Math.ceil(props.totalUnits / maxModulesPerPSU));
+    const totalPSU = props.powerSupplyQty || Math.max(1, Math.ceil(props.totalUnits / (props.isRental ? 16 : 10)));
     const ampsMax = (Number(props.powerMaxW) / 230).toFixed(1);
 
     const psuCenterIndices = new Set<number>();
     const psuIndexMap = new Map<number, number>();
-    let psuCounter = 1;
 
-    for (let rBlock = 0; rBlock < Math.ceil(props.heightRows / 3); rBlock++) {
-      for (let cBlock = 0; cBlock < Math.ceil(props.widthCols / 3); cBlock++) {
-        const centerRow = Math.min(rBlock * 3 + 1, props.heightRows - 1);
-        const centerCol = Math.min(cBlock * 3 + 1, props.widthCols - 1);
-        const centerIdx = centerRow * props.widthCols + centerCol;
-        if (!psuCenterIndices.has(centerIdx)) {
-          psuCenterIndices.add(centerIdx);
-          psuIndexMap.set(centerIdx, psuCounter++);
-        }
+    for (let i = 0; i < totalPSU; i++) {
+      const idx = Math.min(props.totalUnits - 1, Math.floor((i + 0.5) * (props.totalUnits / totalPSU)));
+      if (!psuCenterIndices.has(idx)) {
+        psuCenterIndices.add(idx);
+        psuIndexMap.set(idx, i + 1);
       }
     }
 

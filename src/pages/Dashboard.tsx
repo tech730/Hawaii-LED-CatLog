@@ -467,6 +467,7 @@ const Dashboard: React.FC = () => {
             receivingCardModel={receivingCardModelStr}
             receivingCardMaxW={cardMaxW}
             receivingCardMaxH={cardMaxH}
+            powerSupplyQty={powerSupplyQty}
           />
         </div>
 
@@ -890,6 +891,7 @@ const Dashboard: React.FC = () => {
               receivingCardModel={receivingCardModelStr}
               receivingCardMaxW={cardMaxW}
               receivingCardMaxH={cardMaxH}
+              powerSupplyQty={powerSupplyQty}
             />
           </div>
         )}
