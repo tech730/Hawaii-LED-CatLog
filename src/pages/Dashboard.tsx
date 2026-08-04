@@ -287,7 +287,7 @@ const Dashboard: React.FC = () => {
       setCustomParams(getDefaultParams());
       setCustomBOM(getDefaultBOM());
     }
-  }, [activeSceneId, activeBrand, activePitch, widthCols, heightRows, activeProcessor, activePower, isReportCustomized]);
+  }, [activeSceneId, activeBrand, activePitch, widthCols, heightRows, activeProcessor, activePower, activeCard, isReportCustomized]);
   const SimulatorVisual = (
     <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: '400px' }}>
       
@@ -464,6 +464,9 @@ const Dashboard: React.FC = () => {
             totalWeightKg={totalWeight}
             powerMaxW={powerMax}
             receivingCardQty={receivingCardQty}
+            receivingCardModel={receivingCardModelStr}
+            receivingCardMaxW={cardMaxW}
+            receivingCardMaxH={cardMaxH}
           />
         </div>
 
@@ -884,6 +887,9 @@ const Dashboard: React.FC = () => {
               totalWeightKg={totalWeight}
               powerMaxW={powerMax}
               receivingCardQty={receivingCardQty}
+              receivingCardModel={receivingCardModelStr}
+              receivingCardMaxW={cardMaxW}
+              receivingCardMaxH={cardMaxH}
             />
           </div>
         )}

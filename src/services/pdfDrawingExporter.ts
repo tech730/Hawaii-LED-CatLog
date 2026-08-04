@@ -19,6 +19,7 @@ export interface PDFExportOptions {
     totalWeightKg: string;
     powerMaxW: string;
     receivingCardQty?: number;
+    receivingCardModel?: string;
   };
 }
 
@@ -149,7 +150,8 @@ export async function exportMultiPageTechnicalDrawingPDF(
       pdf.text(`Video Controller: ${projectInfo.processor}`, 14 + col1W, tbY + 12);
       pdf.text(`Power Supplies: ${projectInfo.powerSupply}`, 14 + col1W, tbY + 18);
       pdf.text(`Max Load: ${projectInfo.powerMaxW} W (~ ${(Number(projectInfo.powerMaxW) / 230).toFixed(1)} A) | Weight: ${projectInfo.totalWeightKg} kg`, 14 + col1W, tbY + 24);
-      pdf.text(`Receiving Cards: ${projectInfo.receivingCardQty || 1} Cards Total | Load limit: 80%`, 14 + col1W, tbY + 30);
+      const rcModelStr = projectInfo.receivingCardModel ? ` (${projectInfo.receivingCardModel})` : '';
+      pdf.text(`Receiving Cards: ${projectInfo.receivingCardQty || 1} Cards Total${rcModelStr} | Load limit: 80%`, 14 + col1W, tbY + 30);
       pdf.text(`Structure: 80mm Depth | GI Sheet 2mm + MS Tube 40x20 & 50x25mm`, 14 + col1W, tbY + 36);
 
       // Column 3: Approval / Sign-off Title Block
