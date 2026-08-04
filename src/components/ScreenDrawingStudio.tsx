@@ -446,20 +446,57 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
     const rcRowsCount = Math.ceil(props.heightRows / maxRowsPerRC);
     const totalRC = props.isRental ? props.totalUnits : (rcColsCount * rcRowsCount);
 
+    // Equal / balanced distribution of columns and rows across receiving card blocks
+    const colBlockSizes: number[] = [];
+    const baseCols = Math.floor(props.widthCols / rcColsCount);
+    let remCols = props.widthCols % rcColsCount;
+    for (let c = 0; c < rcColsCount; c++) {
+      const size = baseCols + (remCols > 0 ? 1 : 0);
+      if (remCols > 0) remCols--;
+      colBlockSizes.push(size);
+    }
+
+    const rowBlockSizes: number[] = [];
+    const baseRows = Math.floor(props.heightRows / rcRowsCount);
+    let remRows = props.heightRows % rcRowsCount;
+    for (let r = 0; r < rcRowsCount; r++) {
+      const size = baseRows + (remRows > 0 ? 1 : 0);
+      if (remRows > 0) remRows--;
+      rowBlockSizes.push(size);
+    }
+
     const rcStartIndices = new Set<number>();
     const rcIndexMap = new Map<number, number>();
+    const moduleZoneMap = new Map<number, number>();
+
     let rcCounter = 1;
+    let startRow = 0;
 
     for (let rBlock = 0; rBlock < rcRowsCount; rBlock++) {
+      const blockH = rowBlockSizes[rBlock];
+      let startCol = 0;
+
       for (let cBlock = 0; cBlock < rcColsCount; cBlock++) {
-        const startRow = rBlock * maxRowsPerRC;
-        const startCol = cBlock * maxColsPerRC;
-        const startIdx = startRow * props.widthCols + startCol;
-        if (startIdx < props.totalUnits) {
-          rcStartIndices.add(startIdx);
-          rcIndexMap.set(startIdx, rcCounter++);
+        const blockW = colBlockSizes[cBlock];
+        const rcZoneIdx = rcCounter - 1;
+        const firstIdx = startRow * props.widthCols + startCol;
+
+        if (firstIdx < props.totalUnits) {
+          rcStartIndices.add(firstIdx);
+          rcIndexMap.set(firstIdx, rcCounter++);
         }
+
+        for (let r = 0; r < blockH; r++) {
+          for (let c = 0; c < blockW; c++) {
+            const idx = (startRow + r) * props.widthCols + (startCol + c);
+            moduleZoneMap.set(idx, rcZoneIdx);
+          }
+        }
+
+        startCol += blockW;
       }
+
+      startRow += blockH;
     }
 
     const rcModelName = props.receivingCardModel || 'Novastar';
@@ -480,7 +517,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
       <div style={{ position: 'relative', width: '100%', maxWidth: '850px', margin: '30px auto' }}>
         {/* Header Banner */}
         <div style={{ textAlign: 'center', marginBottom: '15px', color: theme.dimLine, fontWeight: 'bold', fontSize: '0.82rem' }}>
-          04: DATA SIGNAL WIRING DIAGRAM | RECEIVING CARDS ({rcModelName} - {cardMaxW}x{cardMaxH}px LIMIT): {totalRC} COLOR ZONES | MAX {maxColsPerRC} COLS PER CARD
+          04: DATA SIGNAL WIRING DIAGRAM | RECEIVING CARDS ({rcModelName} - {cardMaxW}x{cardMaxH}px LIMIT): {totalRC} EQUAL COLOR ZONES
         </div>
 
         {/* Screen Module Rear Grid */}
@@ -499,9 +536,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
             const row = Math.floor(idx / props.widthCols) + 1;
 
             // Determine RC Zone for this module
-            const rBlock = Math.floor((row - 1) / maxRowsPerRC);
-            const cBlock = Math.floor((col - 1) / maxColsPerRC);
-            const rcZoneIdx = props.isRental ? idx : (rBlock * rcColsCount + cBlock);
+            const rcZoneIdx = props.isRental ? idx : (moduleZoneMap.get(idx) ?? 0);
             const zoneColor = dataZoneColors[rcZoneIdx % dataZoneColors.length];
 
             const isRCStart = rcStartIndices.has(idx);
