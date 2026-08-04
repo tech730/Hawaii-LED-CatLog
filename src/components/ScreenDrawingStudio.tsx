@@ -431,7 +431,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
     </div>
   );
 
-  // 04: DATA SIGNAL WIRING DIAGRAM
+  // 04: DATA SIGNAL WIRING DIAGRAM (COLOR-CODED ZONES)
   const renderDataWiringContent = (theme: typeof currentTheme) => {
     const modResW = Math.round((props.unitW * 1000) / parseFloat(props.pitch));
     const modResH = Math.round((props.unitH * 1000) / parseFloat(props.pitch));
@@ -464,11 +464,23 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
 
     const rcModelName = props.receivingCardModel || 'Novastar';
 
+    // Distinct Zone Palette for Receiving Card Coverage Areas
+    const dataZoneColors = [
+      { bg: 'rgba(16, 185, 129, 0.20)', border: '#10b981', badge: '#059669' }, // Emerald Green
+      { bg: 'rgba(56, 189, 248, 0.20)', border: '#38bdf8', badge: '#0284c7' }, // Sky Blue
+      { bg: 'rgba(168, 85, 247, 0.20)', border: '#a855f7', badge: '#7e22ce' }, // Purple
+      { bg: 'rgba(245, 158, 11, 0.20)', border: '#f59e0b', badge: '#d97706' }, // Amber
+      { bg: 'rgba(236, 72, 153, 0.20)', border: '#ec4899', badge: '#be185d' }, // Pink
+      { bg: 'rgba(20, 184, 166, 0.20)', border: '#14b8a6', badge: '#0d9488' }, // Teal
+      { bg: 'rgba(99, 102, 241, 0.20)', border: '#6366f1', badge: '#4338ca' }, // Indigo
+      { bg: 'rgba(234, 179, 8, 0.20)', border: '#eab308', badge: '#ca8a04' }   // Yellow
+    ];
+
     return (
       <div style={{ position: 'relative', width: '100%', maxWidth: '850px', margin: '30px auto' }}>
         {/* Header Banner */}
         <div style={{ textAlign: 'center', marginBottom: '15px', color: theme.dimLine, fontWeight: 'bold', fontSize: '0.82rem' }}>
-          04: DATA SIGNAL WIRING DIAGRAM | RECEIVING CARDS ({rcModelName} - {cardMaxW}x{cardMaxH}px LIMIT): {totalRC} UNITS | MAX {maxColsPerRC} COLS PER CARD
+          04: DATA SIGNAL WIRING DIAGRAM | RECEIVING CARDS ({rcModelName} - {cardMaxW}x{cardMaxH}px LIMIT): {totalRC} COLOR ZONES | MAX {maxColsPerRC} COLS PER CARD
         </div>
 
         {/* Screen Module Rear Grid */}
@@ -486,6 +498,12 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
             const col = (idx % props.widthCols) + 1;
             const row = Math.floor(idx / props.widthCols) + 1;
 
+            // Determine RC Zone for this module
+            const rBlock = Math.floor((row - 1) / maxRowsPerRC);
+            const cBlock = Math.floor((col - 1) / maxColsPerRC);
+            const rcZoneIdx = props.isRental ? idx : (rBlock * rcColsCount + cBlock);
+            const zoneColor = dataZoneColors[rcZoneIdx % dataZoneColors.length];
+
             const isRCStart = rcStartIndices.has(idx);
             const rcNum = rcIndexMap.get(idx);
 
@@ -493,8 +511,9 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
               <div 
                 key={idx} 
                 style={{ 
-                  borderRight: `1px dashed ${theme.gridBorder}`, 
-                  borderBottom: `1px dashed ${theme.gridBorder}`,
+                  background: zoneColor.bg,
+                  borderRight: `1px solid ${zoneColor.border}`, 
+                  borderBottom: `1px solid ${zoneColor.border}`,
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -508,7 +527,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                   <div style={{ 
                     width: '92%', 
                     height: '70%', 
-                    background: theme.cardColor, 
+                    background: zoneColor.badge, 
                     borderRadius: '4px',
                     display: 'flex',
                     flexDirection: 'column',
@@ -521,7 +540,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                     border: '1.5px solid #fff'
                   }}>
                     <span>RC-{rcNum}</span>
-                    <span style={{ fontSize: '0.45rem', opacity: 0.9 }}>FEED (C{col}R{row})</span>
+                    <span style={{ fontSize: '0.45rem', opacity: 0.95 }}>FEED (C{col}R{row})</span>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: 0.9 }}>
@@ -529,8 +548,8 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                       C{col}R{row}
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px' }}>
-                      <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: theme.dataCable }} />
-                      <span style={{ fontSize: '0.45rem', color: theme.dataCable, fontWeight: 'bold' }}>CAT6 LOOP→</span>
+                      <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: zoneColor.border }} />
+                      <span style={{ fontSize: '0.45rem', color: zoneColor.border, fontWeight: 'bold' }}>CAT6 LOOP→</span>
                     </div>
                   </div>
                 )}
@@ -542,7 +561,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
     );
   };
 
-  // 05: POWER DISTRIBUTION DIAGRAM
+  // 05: POWER DISTRIBUTION DIAGRAM (COLOR-CODED ZONES)
   const renderPowerWiringContent = (theme: typeof currentTheme) => {
     const totalPSU = props.powerSupplyQty || Math.max(1, Math.ceil(props.totalUnits / (props.isRental ? 16 : 10)));
     const ampsMax = (Number(props.powerMaxW) / 230).toFixed(1);
@@ -550,19 +569,33 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
     const psuCenterIndices = new Set<number>();
     const psuIndexMap = new Map<number, number>();
 
+    const modsPerPSU = props.totalUnits / totalPSU;
+
     for (let i = 0; i < totalPSU; i++) {
-      const idx = Math.min(props.totalUnits - 1, Math.floor((i + 0.5) * (props.totalUnits / totalPSU)));
+      const idx = Math.min(props.totalUnits - 1, Math.floor((i + 0.5) * modsPerPSU));
       if (!psuCenterIndices.has(idx)) {
         psuCenterIndices.add(idx);
         psuIndexMap.set(idx, i + 1);
       }
     }
 
+    // Distinct Zone Palette for Power Supply Coverage Areas
+    const powerZoneColors = [
+      { bg: 'rgba(245, 158, 11, 0.22)', border: '#f59e0b', badge: '#d97706' }, // Gold / Amber
+      { bg: 'rgba(239, 68, 68, 0.22)', border: '#ef4444', badge: '#dc2626' },   // Red
+      { bg: 'rgba(59, 130, 246, 0.22)', border: '#3b82f6', badge: '#1d4ed8' },  // Blue
+      { bg: 'rgba(34, 197, 94, 0.22)', border: '#22c55e', badge: '#15803d' },  // Green
+      { bg: 'rgba(168, 85, 247, 0.22)', border: '#a855f7', badge: '#7e22ce' }, // Violet
+      { bg: 'rgba(236, 72, 153, 0.22)', border: '#ec4899', badge: '#be185d' }, // Pink
+      { bg: 'rgba(14, 165, 233, 0.22)', border: '#0ea5e9', badge: '#0369a1' }, // Cyan
+      { bg: 'rgba(249, 115, 22, 0.22)', border: '#f97316', badge: '#c2410c' }  // Orange
+    ];
+
     return (
       <div style={{ position: 'relative', width: '100%', maxWidth: '850px', margin: '30px auto' }}>
         {/* Header Banner */}
         <div style={{ textAlign: 'center', marginBottom: '15px', color: theme.powerCable, fontWeight: 'bold', fontSize: '0.82rem' }}>
-          05: POWER DISTRIBUTION DIAGRAM | 60A 5V DC PSUs: {totalPSU} UNITS | AC MAINS LOAD: ~ {ampsMax}A @ 230V ({props.powerMaxW}W MAX)
+          05: POWER DISTRIBUTION DIAGRAM | 60A 5V DC PSUs: {totalPSU} COLOR ZONES | AC MAINS LOAD: ~ {ampsMax}A @ 230V ({props.powerMaxW}W MAX)
         </div>
 
         {/* Screen Module Rear Grid */}
@@ -580,6 +613,10 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
             const col = (idx % props.widthCols) + 1;
             const row = Math.floor(idx / props.widthCols) + 1;
 
+            // Determine PSU Zone for this module
+            const psuZoneIdx = Math.min(totalPSU - 1, Math.floor(idx / modsPerPSU));
+            const zoneColor = powerZoneColors[psuZoneIdx % powerZoneColors.length];
+
             const isPSUCenter = psuCenterIndices.has(idx);
             const psuNum = psuIndexMap.get(idx);
 
@@ -587,8 +624,9 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
               <div 
                 key={idx} 
                 style={{ 
-                  borderRight: `1px dashed ${theme.gridBorder}`, 
-                  borderBottom: `1px dashed ${theme.gridBorder}`,
+                  background: zoneColor.bg,
+                  borderRight: `1px solid ${zoneColor.border}`, 
+                  borderBottom: `1px solid ${zoneColor.border}`,
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -602,19 +640,20 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                   <div style={{ 
                     width: '90%', 
                     height: '65%', 
-                    background: theme.powerCable, 
+                    background: zoneColor.badge, 
                     borderRadius: '4px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#000',
+                    color: '#fff',
                     fontSize: '0.62rem',
                     fontWeight: 'bold',
-                    boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+                    border: '1.5px solid #fff'
                   }}>
                     <span>PSU-{psuNum}</span>
-                    <span style={{ fontSize: '0.48rem' }}>60A (5V DC)</span>
+                    <span style={{ fontSize: '0.48rem', opacity: 0.95 }}>60A (5V DC)</span>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: 0.9 }}>
@@ -622,8 +661,8 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                       C{col}R{row}
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px' }}>
-                      <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: theme.powerCable }} />
-                      <span style={{ fontSize: '0.45rem', color: theme.powerCable, fontWeight: 'bold' }}>5V DC→</span>
+                      <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: zoneColor.border }} />
+                      <span style={{ fontSize: '0.45rem', color: zoneColor.border, fontWeight: 'bold' }}>5V DC→</span>
                     </div>
                   </div>
                 )}
