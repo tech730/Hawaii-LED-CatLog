@@ -36,7 +36,6 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
   const [viewMode, setViewMode] = useState<ViewMode>('front');
   const [themeMode, setThemeMode] = useState<ThemeMode>('blueprint');
   const [showDimensions] = useState(true);
-  const [showGridLabels] = useState(true);
   const [showHumanScale] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -161,7 +160,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
   // ----------------------------------------------------------------------
 
   // 01: FRONT ELEVATION
-  const renderFrontViewContent = (theme: typeof currentTheme, showLabels: boolean, showDims: boolean, showHuman: boolean) => (
+  const renderFrontViewContent = (theme: typeof currentTheme, showDims: boolean, showHuman: boolean) => (
     <div style={{ position: 'relative', width: '100%', maxWidth: '850px', margin: '30px auto' }}>
       {/* Top Dimension Line (Width) */}
       {showDims && (
@@ -203,9 +202,6 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
         position: 'relative'
       }}>
         {Array.from({ length: props.totalUnits }).map((_, idx) => {
-          const col = (idx % props.widthCols) + 1;
-          const row = Math.floor(idx / props.widthCols) + 1;
-          
           return (
             <div 
               key={idx} 
@@ -221,11 +217,6 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                 overflow: 'hidden'
               }}
             >
-              {showLabels && (
-                <span style={{ fontSize: '0.7rem', color: theme.textMain, fontWeight: '600' }}>
-                  C{col}R{row}
-                </span>
-              )}
               <span style={{ fontSize: '0.6rem', color: theme.textSub }}>
                 {unitWidthMm}x{unitHeightMm}
               </span>
@@ -532,9 +523,6 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
           position: 'relative'
         }}>
           {Array.from({ length: props.totalUnits }).map((_, idx) => {
-            const col = (idx % props.widthCols) + 1;
-            const row = Math.floor(idx / props.widthCols) + 1;
-
             // Determine RC Zone for this module
             const rcZoneIdx = props.isRental ? idx : (moduleZoneMap.get(idx) ?? 0);
             const zoneColor = dataZoneColors[rcZoneIdx % dataZoneColors.length];
@@ -575,13 +563,10 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                     border: '1.5px solid #fff'
                   }}>
                     <span>RC-{rcNum}</span>
-                    <span style={{ fontSize: '0.45rem', opacity: 0.95 }}>FEED (C{col}R{row})</span>
+                    <span style={{ fontSize: '0.45rem', opacity: 0.95 }}>FEED</span>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: 0.9 }}>
-                    <span style={{ fontSize: '0.6rem', color: theme.textMain, fontWeight: '600' }}>
-                      C{col}R{row}
-                    </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px' }}>
                       <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: zoneColor.border }} />
                       <span style={{ fontSize: '0.45rem', color: zoneColor.border, fontWeight: 'bold' }}>CAT6 LOOP→</span>
@@ -668,9 +653,6 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
           position: 'relative'
         }}>
           {Array.from({ length: props.totalUnits }).map((_, idx) => {
-            const col = (idx % props.widthCols) + 1;
-            const row = Math.floor(idx / props.widthCols) + 1;
-
             const psuInfo = psuZoneMap.get(idx) || { psuNum: 1, zoneIdx: 0, isCenter: false };
             const zoneColor = powerZoneColors[psuInfo.zoneIdx % powerZoneColors.length];
 
@@ -711,9 +693,6 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: 0.9 }}>
-                    <span style={{ fontSize: '0.6rem', color: theme.textMain, fontWeight: '600' }}>
-                      C{col}R{row}
-                    </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px' }}>
                       <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: zoneColor.border }} />
                       <span style={{ fontSize: '0.45rem', color: zoneColor.border, fontWeight: 'bold' }}>5V DC→</span>
@@ -877,7 +856,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
       {/* ------------------------------------------------------------------ */}
       <div id="technical-drawing-canvas-area" style={{ width: '100%', background: currentTheme.bg, padding: '20px', borderRadius: '8px' }}>
         
-        {viewMode === 'front' && renderFrontViewContent(currentTheme, showGridLabels, showDimensions, showHumanScale)}
+        {viewMode === 'front' && renderFrontViewContent(currentTheme, showDimensions, showHumanScale)}
         {viewMode === 'top' && renderTopViewContent(currentTheme)}
         {viewMode === 'side' && renderSideViewContent(currentTheme)}
         {viewMode === 'data' && renderDataWiringContent(currentTheme)}
@@ -892,7 +871,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
       {/* ------------------------------------------------------------------ */}
       <div style={{ position: 'absolute', left: '-9999px', top: 0, width: '900px', pointerEvents: 'none' }}>
         <div id="export-view-front" style={{ width: '850px', background: currentTheme.bg, padding: '24px' }}>
-          {renderFrontViewContent(currentTheme, true, true, false)}
+          {renderFrontViewContent(currentTheme, true, false)}
           {renderTitleBlock(currentTheme)}
         </div>
 
