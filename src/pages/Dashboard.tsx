@@ -128,6 +128,107 @@ const Dashboard: React.FC = () => {
   const [customBOM, setCustomBOM] = useState<any[]>([]);
   const [isReportCustomized, setIsReportCustomized] = useState(false);
 
+  // Measurement & Sizing State
+  type MeasurementUnit = 'm' | 'ft' | 'in' | 'mm';
+  type SizingMode = 'module_count' | 'dimensions' | 'target_area';
+
+  const [measurementUnit, setMeasurementUnit] = useState<MeasurementUnit>('m');
+  const [sizingMode, setSizingMode] = useState<SizingMode>('module_count');
+  const [targetWidthInput, setTargetWidthInput] = useState<string>('1.6');
+  const [targetHeightInput, setTargetHeightInput] = useState<string>('0.48');
+  const [targetAreaInput, setTargetAreaInput] = useState<string>('0.77');
+  const [targetRatio, setTargetRatio] = useState<string>('16:9');
+
+  const M_TO_FT = 3.28084;
+  const M_TO_IN = 39.3701;
+  const M_TO_MM = 1000;
+  const SQM_TO_SQFT = 10.7639;
+
+  const convertLengthToMeters = (val: number, unit: MeasurementUnit): number => {
+    if (unit === 'ft') return val / M_TO_FT;
+    if (unit === 'in') return val / M_TO_IN;
+    if (unit === 'mm') return val / M_TO_MM;
+    return val;
+  };
+
+  const convertMetersToUnit = (meters: number, unit: MeasurementUnit): number => {
+    if (unit === 'ft') return meters * M_TO_FT;
+    if (unit === 'in') return meters * M_TO_IN;
+    if (unit === 'mm') return meters * M_TO_MM;
+    return meters;
+  };
+
+  const convertAreaToSqm = (val: number, unit: MeasurementUnit): number => {
+    if (unit === 'ft' || unit === 'in') return val / SQM_TO_SQFT;
+    return val;
+  };
+
+  const convertSqmToUnit = (sqm: number, unit: MeasurementUnit): number => {
+    if (unit === 'ft' || unit === 'in') return sqm * SQM_TO_SQFT;
+    return sqm;
+  };
+
+  const formatLengthWithUnit = (meters: number, unit: MeasurementUnit): string => {
+    if (unit === 'ft') return `${(meters * M_TO_FT).toFixed(2)} ft`;
+    if (unit === 'in') return `${(meters * M_TO_IN).toFixed(1)} in`;
+    if (unit === 'mm') return `${Math.round(meters * M_TO_MM)} mm`;
+    return `${meters.toFixed(2)} m`;
+  };
+
+  const formatAreaWithUnit = (sqm: number, unit: MeasurementUnit): string => {
+    if (unit === 'ft' || unit === 'in') return `${(sqm * SQM_TO_SQFT).toFixed(2)} sq ft`;
+    return `${sqm.toFixed(2)} m²`;
+  };
+
+  const handleDimensionsChange = (twStr: string, thStr: string, unit: MeasurementUnit, uW: number, uH: number) => {
+    setTargetWidthInput(twStr);
+    setTargetHeightInput(thStr);
+    const wNum = parseFloat(twStr);
+    const hNum = parseFloat(thStr);
+    if (!isNaN(wNum) && !isNaN(hNum) && wNum > 0 && hNum > 0) {
+      const wM = convertLengthToMeters(wNum, unit);
+      const hM = convertLengthToMeters(hNum, unit);
+      const cols = Math.max(1, Math.round(wM / uW));
+      const rows = Math.max(1, Math.round(hM / uH));
+      setWidthCols(cols);
+      setHeightRows(rows);
+    }
+  };
+
+  const handleTargetAreaChange = (areaStr: string, ratioStr: string, unit: MeasurementUnit, uW: number, uH: number) => {
+    setTargetAreaInput(areaStr);
+    setTargetRatio(ratioStr);
+    const areaNum = parseFloat(areaStr);
+    if (!isNaN(areaNum) && areaNum > 0) {
+      const sqm = convertAreaToSqm(areaNum, unit);
+      let ratioVal = 16 / 9;
+      if (ratioStr === '4:3') ratioVal = 4 / 3;
+      else if (ratioStr === '21:9') ratioVal = 21 / 9;
+      else if (ratioStr === '8:3') ratioVal = 8 / 3;
+      else if (ratioStr === '1:1') ratioVal = 1;
+
+      const targetW = Math.sqrt(sqm * ratioVal);
+      const targetH = targetW / ratioVal;
+
+      const cols = Math.max(1, Math.round(targetW / uW));
+      const rows = Math.max(1, Math.round(targetH / uH));
+      setWidthCols(cols);
+      setHeightRows(rows);
+    }
+  };
+
+  const handleUnitChange = (newUnit: MeasurementUnit) => {
+    if (newUnit === measurementUnit) return;
+    const curWMeters = parseFloat(totalWidth);
+    const curHMeters = parseFloat(totalHeight);
+    const curAreaSqm = parseFloat(totalArea);
+
+    setTargetWidthInput(convertMetersToUnit(curWMeters, newUnit).toFixed(2));
+    setTargetHeightInput(convertMetersToUnit(curHMeters, newUnit).toFixed(2));
+    setTargetAreaInput(convertSqmToUnit(curAreaSqm, newUnit).toFixed(2));
+    setMeasurementUnit(newUnit);
+  };
+
   const activeScene = SCENES.find(s => s.id === activeSceneId) || SCENES[0];
   const availablePitches = PITCH_SETS[activeSceneId as keyof typeof PITCH_SETS] || PITCH_SETS.indoor;
 
@@ -257,14 +358,15 @@ const Dashboard: React.FC = () => {
     { id: '1', group: 'p1', category: 'Technology / Scene', label: 'Scene', value: activeScene.name, unit: '-' },
     { id: '2', group: 'p1', category: 'Pixel Pitch', label: 'Pitch', value: `P${activePitch}`, unit: 'mm' },
     { id: '3', group: 'p1', category: 'Unit Size', label: 'Unit', value: `${unitW * 1000} x ${unitH * 1000}`, unit: 'mm' },
-    { id: '4', group: 'p1', category: 'Quantity', label: 'Total Pcs', value: `${widthCols} x ${heightRows} (${totalUnits})`, unit: 'Pcs' },
-    { id: '5', group: 'p2', category: 'Display Area', label: 'Total Area', value: totalArea, unit: 'm²' },
-    { id: '6', group: 'p2', category: 'Resolution', label: 'Total Pixels', value: `${resW} x ${resH}`, unit: 'Pixels' },
-    { id: '7', group: 'p2', category: 'Brightness', label: 'Max Brightness', value: brightnessRange, unit: 'nits' },
-    { id: '8', group: 'p2', category: 'Viewing Angle', label: 'Angle', value: viewingAngle, unit: 'H/V' },
-    { id: '9', group: 'p2', category: 'Refresh', label: 'Frequency', value: refreshRate, unit: 'Hz' },
-    { id: '10', group: 'p2', category: 'Grayscale', label: 'Bit Depth', value: grayscale, unit: 'bit' },
-    { id: '11', group: 'p2', category: 'Heat', label: 'Heat Output', value: `${heatTyp} / ${heatMax}`, unit: 'BTU/h' },
+    { id: '4', group: 'p1', category: 'Quantity', label: 'Total Pcs', value: `${widthCols} x ${heightRows} (${totalUnits})`, unit: isRental ? 'Cabinets' : 'Modules' },
+    { id: '5', group: 'p2', category: 'Display Dimensions', label: 'Dimensions (W x H)', value: `${formatLengthWithUnit(parseFloat(totalWidth), measurementUnit)} x ${formatLengthWithUnit(parseFloat(totalHeight), measurementUnit)}`, unit: measurementUnit },
+    { id: '6', group: 'p2', category: 'Display Area', label: 'Total Area', value: formatAreaWithUnit(parseFloat(totalArea), measurementUnit), unit: measurementUnit === 'ft' || measurementUnit === 'in' ? 'sq ft' : 'm²' },
+    { id: '7', group: 'p2', category: 'Resolution', label: 'Total Pixels', value: `${resW} x ${resH}`, unit: 'Pixels' },
+    { id: '8', group: 'p2', category: 'Brightness', label: 'Max Brightness', value: brightnessRange, unit: 'nits' },
+    { id: '9', group: 'p2', category: 'Viewing Angle', label: 'Angle', value: viewingAngle, unit: 'H/V' },
+    { id: '10', group: 'p2', category: 'Refresh', label: 'Frequency', value: refreshRate, unit: 'Hz' },
+    { id: '11', group: 'p2', category: 'Grayscale', label: 'Bit Depth', value: grayscale, unit: 'bit' },
+    { id: '12', group: 'p2', category: 'Heat', label: 'Heat Output', value: `${heatTyp} / ${heatMax}`, unit: 'BTU/h' },
   ];
 
   const panelSpec = isRental ? '500x500mm' : (isGobCabinet ? '600x337.5mm' : '320x160mm');
@@ -283,7 +385,7 @@ const Dashboard: React.FC = () => {
     { id: 'b7', item: 'Cat6 Signal Cable (RC Loop)', model: 'Cat6 Ethernet Patch Cord', qty: receivingCardQty, spec: '1 Cat6 Cable per Receiving Card (RC to RC Loop)' },
     { id: 'b8', item: '16-Pin Data Flat Cable', model: 'HUB75 Data Ribbon Cable', qty: totalUnits, spec: '1 Flat Cable per LED Module (Module Signal Feed)' },
     { id: 'b9', item: 'PSU Loop AC Power Cable', model: '3-Core 2.5mm² Power Cable', qty: `${powerSupplyQty} m`, spec: '1 Meter per Power Supply (AC Mains Line)' },
-    { id: 'b10', item: 'Laser Cut GI Sheet', model: 'GI Sheet 2mm Thickness', qty: 1, spec: `${(Math.round(widthCols * unitW * 1000) + 2)}x${(Math.round(heightRows * unitH * 1000) + 2)}mm (${totalArea} m²)` },
+    { id: 'b10', item: 'Laser Cut GI Sheet', model: 'GI Sheet 2mm Thickness', qty: 1, spec: `${(Math.round(widthCols * unitW * 1000) + 2)}x${(Math.round(heightRows * unitH * 1000) + 2)}mm (${formatAreaWithUnit(parseFloat(totalArea), measurementUnit)})` },
     { id: 'b11', item: 'MS Tube 40x20mm', model: 'Mild Steel Tubing Sub-Frame', qty: `${Math.ceil((widthCols + 1) * parseFloat(totalHeight))} m`, spec: '20mm Depth Structural Sub-Assembly' },
     { id: 'b12', item: 'MS Tube 50x25mm', model: 'Mild Steel Main Tube Frame', qty: `${Math.ceil((widthCols / 2 + 1) * parseFloat(totalHeight))} m`, spec: '25mm Depth Main Structure (80mm Total)' },
     { id: 'b13', item: 'Module Magnets', model: 'M4 Magnet Stud Pillars', qty: totalUnits * 6, spec: '6 Magnets per LED Module' },
@@ -300,7 +402,7 @@ const Dashboard: React.FC = () => {
       setCustomParams(getDefaultParams());
       setCustomBOM(getDefaultBOM());
     }
-  }, [activeSceneId, activeBrand, activePitch, widthCols, heightRows, activeProcessor, activePower, activeCard, isReportCustomized]);
+  }, [activeSceneId, activeBrand, activePitch, widthCols, heightRows, activeProcessor, activePower, activeCard, measurementUnit, isReportCustomized]);
   const SimulatorVisual = (
     <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: '400px' }}>
       
@@ -327,7 +429,7 @@ const Dashboard: React.FC = () => {
 
         {/* Dimension Guides: Top (Width) */}
         <div style={{ position: 'absolute', top: '-40px', left: 0, right: 0, height: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ fontSize: '0.75rem', color: '#475569', marginBottom: '4px', fontWeight: 'bold' }}>{totalWidth}m ({resW}px)</div>
+          <div style={{ fontSize: '0.75rem', color: '#475569', marginBottom: '4px', fontWeight: 'bold' }}>{formatLengthWithUnit(parseFloat(totalWidth), measurementUnit)} ({resW}px)</div>
           <div style={{ width: '100%', borderBottom: '1px dashed #94a3b8', position: 'relative' }}>
             <div style={{ position: 'absolute', left: 0, top: '-4px', width: '1px', height: '8px', background: '#94a3b8' }} />
             <div style={{ position: 'absolute', right: 0, top: '-4px', width: '1px', height: '8px', background: '#94a3b8' }} />
@@ -335,13 +437,13 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Dimension Guides: Right (Height) */}
-        <div style={{ position: 'absolute', right: '-80px', top: 0, bottom: 0, width: '60px', display: 'flex', alignItems: 'center' }}>
+        <div style={{ position: 'absolute', right: '-110px', top: 0, bottom: 0, width: '90px', display: 'flex', alignItems: 'center' }}>
           <div style={{ height: '100%', borderRight: '1px dashed #94a3b8', position: 'relative', marginRight: '8px' }}>
             <div style={{ position: 'absolute', top: 0, right: '-4px', width: '8px', height: '1px', background: '#94a3b8' }} />
             <div style={{ position: 'absolute', bottom: 0, right: '-4px', width: '8px', height: '1px', background: '#94a3b8' }} />
           </div>
           <div style={{ fontSize: '0.75rem', color: '#475569', whiteSpace: 'nowrap', fontWeight: 'bold' }}>
-            {totalHeight}m <br/>({resH}px)
+            {formatLengthWithUnit(parseFloat(totalHeight), measurementUnit)} <br/>({resH}px)
           </div>
         </div>
       </div>
@@ -481,6 +583,7 @@ const Dashboard: React.FC = () => {
             receivingCardMaxW={cardMaxW}
             receivingCardMaxH={cardMaxH}
             powerSupplyQty={powerSupplyQty}
+            measurementUnit={measurementUnit}
           />
         </div>
 
@@ -532,7 +635,7 @@ const Dashboard: React.FC = () => {
           </div>
           <div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}><LayoutGrid size={12} style={{marginRight:'4px'}}/>AREA / QTY</div>
-            <div style={{ fontWeight: '700', fontSize: '1.2rem' }}>{totalArea} m² / {totalUnits}</div>
+            <div style={{ fontWeight: '700', fontSize: '1.2rem' }}>{formatAreaWithUnit(parseFloat(totalArea), measurementUnit)} / {totalUnits} Pcs</div>
           </div>
           <div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}><Zap size={12} style={{marginRight:'4px'}}/>POWER (Max/Avg)</div>
@@ -639,37 +742,198 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Panel 3: Size */}
+        {/* Panel 3: Size & Measurement Type */}
         <div className="glass-card" style={{ padding: '15px' }}>
-          <h3 style={{ fontSize: '1rem', marginBottom: '12px', color: 'var(--primary)', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>3: Screen Size</h3>
-          <div style={{ marginBottom: '12px' }}>
-            <label style={{ fontSize: '0.75rem', color: '#64748b' }}>{isRental ? 'CABINET' : 'MODULE'} COLUMNS (W)</label>
-            <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px' }}>
-              <button onClick={() => setWidthCols(Math.max(1, widthCols - 1))} style={{ width: '30px', height: '30px', border: '1px solid #cbd5e1', cursor: 'pointer' }}>-</button>
-              <input 
-                type="number" 
-                value={widthCols} 
-                onChange={(e) => setWidthCols(Math.max(1, parseInt(e.target.value) || 1))}
-                style={{ width: '50px', textAlign: 'center', fontWeight: 'bold', border: 'none', background: 'transparent', outline: 'none' }}
-              />
-              <button onClick={() => setWidthCols(widthCols + 1)} style={{ width: '30px', height: '30px', border: '1px solid #cbd5e1', cursor: 'pointer' }}>+</button>
-            </div>
-            <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Unit: {unitW}m</span>
+          <h3 style={{ fontSize: '1rem', marginBottom: '10px', color: 'var(--primary)', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>3: Screen Size</span>
+            <span style={{ fontSize: '0.7rem', textTransform: 'none', color: '#64748b' }}>
+              {formatLengthWithUnit(parseFloat(totalWidth), measurementUnit)} x {formatLengthWithUnit(parseFloat(totalHeight), measurementUnit)}
+            </span>
+          </h3>
+
+          {/* Mode Selector Tabs */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px', marginBottom: '10px' }}>
+            <button
+              onClick={() => setSizingMode('module_count')}
+              style={{
+                padding: '5px 2px',
+                fontSize: '0.7rem',
+                fontWeight: '600',
+                background: sizingMode === 'module_count' ? '#0f172a' : '#f1f5f9',
+                color: sizingMode === 'module_count' ? '#fff' : '#475569',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Grid Count
+            </button>
+            <button
+              onClick={() => {
+                setSizingMode('dimensions');
+                handleDimensionsChange(targetWidthInput, targetHeightInput, measurementUnit, unitW, unitH);
+              }}
+              style={{
+                padding: '5px 2px',
+                fontSize: '0.7rem',
+                fontWeight: '600',
+                background: sizingMode === 'dimensions' ? '#0f172a' : '#f1f5f9',
+                color: sizingMode === 'dimensions' ? '#fff' : '#475569',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Dimensions
+            </button>
+            <button
+              onClick={() => {
+                setSizingMode('target_area');
+                handleTargetAreaChange(targetAreaInput, targetRatio, measurementUnit, unitW, unitH);
+              }}
+              style={{
+                padding: '5px 2px',
+                fontSize: '0.7rem',
+                fontWeight: '600',
+                background: sizingMode === 'target_area' ? '#0f172a' : '#f1f5f9',
+                color: sizingMode === 'target_area' ? '#fff' : '#475569',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Target Area
+            </button>
           </div>
-          <div>
-            <label style={{ fontSize: '0.75rem', color: '#64748b' }}>{isRental ? 'CABINET' : 'MODULE'} ROWS (H)</label>
-            <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px' }}>
-              <button onClick={() => setHeightRows(Math.max(1, heightRows - 1))} style={{ width: '30px', height: '30px', border: '1px solid #cbd5e1', cursor: 'pointer' }}>-</button>
-              <input 
-                type="number" 
-                value={heightRows} 
-                onChange={(e) => setHeightRows(Math.max(1, parseInt(e.target.value) || 1))}
-                style={{ width: '50px', textAlign: 'center', fontWeight: 'bold', border: 'none', background: 'transparent', outline: 'none' }}
-              />
-              <button onClick={() => setHeightRows(heightRows + 1)} style={{ width: '30px', height: '30px', border: '1px solid #cbd5e1', cursor: 'pointer' }}>+</button>
-            </div>
-            <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Unit: {unitH}m</span>
+
+          {/* Unit Switcher */}
+          <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontSize: '0.7rem', color: '#64748b', marginRight: '4px', fontWeight: 'bold' }}>Unit:</span>
+            {(['m', 'ft', 'in', 'mm'] as MeasurementUnit[]).map(unit => (
+              <button
+                key={unit}
+                onClick={() => handleUnitChange(unit)}
+                style={{
+                  padding: '3px 8px',
+                  fontSize: '0.7rem',
+                  fontWeight: 'bold',
+                  background: measurementUnit === unit ? '#0284c7' : '#f1f5f9',
+                  color: measurementUnit === unit ? '#fff' : '#475569',
+                  border: `1px solid ${measurementUnit === unit ? '#0284c7' : '#cbd5e1'}`,
+                  borderRadius: '3px',
+                  cursor: 'pointer'
+                }}
+              >
+                {unit}
+              </button>
+            ))}
           </div>
+
+          {/* Sizing Mode Body */}
+          {sizingMode === 'module_count' && (
+            <>
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>
+                  {isRental ? 'CABINET' : 'MODULE'} COLUMNS (W)
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px' }}>
+                  <button onClick={() => setWidthCols(Math.max(1, widthCols - 1))} style={{ width: '30px', height: '30px', border: '1px solid #cbd5e1', cursor: 'pointer', borderRadius: '4px 0 0 4px' }}>-</button>
+                  <input
+                    type="number"
+                    value={widthCols}
+                    onChange={(e) => setWidthCols(Math.max(1, parseInt(e.target.value) || 1))}
+                    style={{ width: '50px', height: '30px', textAlign: 'center', fontWeight: 'bold', border: '1px solid #cbd5e1', borderLeft: 'none', borderRight: 'none', background: '#fff', outline: 'none' }}
+                  />
+                  <button onClick={() => setWidthCols(widthCols + 1)} style={{ width: '30px', height: '30px', border: '1px solid #cbd5e1', cursor: 'pointer', borderRadius: '0 4px 4px 0' }}>+</button>
+                  <span style={{ fontSize: '0.75rem', color: '#334155', marginLeft: '10px', fontWeight: '500' }}>
+                    = {formatLengthWithUnit(parseFloat(totalWidth), measurementUnit)}
+                  </span>
+                </div>
+              </div>
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>
+                  {isRental ? 'CABINET' : 'MODULE'} ROWS (H)
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px' }}>
+                  <button onClick={() => setHeightRows(Math.max(1, heightRows - 1))} style={{ width: '30px', height: '30px', border: '1px solid #cbd5e1', cursor: 'pointer', borderRadius: '4px 0 0 4px' }}>-</button>
+                  <input
+                    type="number"
+                    value={heightRows}
+                    onChange={(e) => setHeightRows(Math.max(1, parseInt(e.target.value) || 1))}
+                    style={{ width: '50px', height: '30px', textAlign: 'center', fontWeight: 'bold', border: '1px solid #cbd5e1', borderLeft: 'none', borderRight: 'none', background: '#fff', outline: 'none' }}
+                  />
+                  <button onClick={() => setHeightRows(heightRows + 1)} style={{ width: '30px', height: '30px', border: '1px solid #cbd5e1', cursor: 'pointer', borderRadius: '0 4px 4px 0' }}>+</button>
+                  <span style={{ fontSize: '0.75rem', color: '#334155', marginLeft: '10px', fontWeight: '500' }}>
+                    = {formatLengthWithUnit(parseFloat(totalHeight), measurementUnit)}
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+
+          {sizingMode === 'dimensions' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div>
+                <label style={{ fontSize: '0.7rem', color: '#64748b' }}>TARGET WIDTH ({measurementUnit})</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={targetWidthInput}
+                  onChange={(e) => handleDimensionsChange(e.target.value, targetHeightInput, measurementUnit, unitW, unitH)}
+                  style={{ width: '100%', padding: '6px 8px', fontSize: '0.85rem', borderRadius: '4px', border: '1px solid #cbd5e1', outline: 'none' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.7rem', color: '#64748b' }}>TARGET HEIGHT ({measurementUnit})</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={targetHeightInput}
+                  onChange={(e) => handleDimensionsChange(targetWidthInput, e.target.value, measurementUnit, unitW, unitH)}
+                  style={{ width: '100%', padding: '6px 8px', fontSize: '0.85rem', borderRadius: '4px', border: '1px solid #cbd5e1', outline: 'none' }}
+                />
+              </div>
+              <div style={{ background: '#f8fafc', padding: '8px', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '0.75rem', marginTop: '4px' }}>
+                <div style={{ color: '#0284c7', fontWeight: 'bold' }}>⚡ Grid Achieved: {widthCols} x {heightRows} ({totalUnits} Pcs)</div>
+                <div style={{ color: '#475569' }}>Size: {formatLengthWithUnit(parseFloat(totalWidth), measurementUnit)} x {formatLengthWithUnit(parseFloat(totalHeight), measurementUnit)}</div>
+              </div>
+            </div>
+          )}
+
+          {sizingMode === 'target_area' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div>
+                <label style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                  TARGET AREA ({measurementUnit === 'ft' || measurementUnit === 'in' ? 'sq ft' : 'm²'})
+                </label>
+                <input
+                  type="number"
+                  step="0.5"
+                  value={targetAreaInput}
+                  onChange={(e) => handleTargetAreaChange(e.target.value, targetRatio, measurementUnit, unitW, unitH)}
+                  style={{ width: '100%', padding: '6px 8px', fontSize: '0.85rem', borderRadius: '4px', border: '1px solid #cbd5e1', outline: 'none' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.7rem', color: '#64748b' }}>ASPECT RATIO</label>
+                <select
+                  value={targetRatio}
+                  onChange={(e) => handleTargetAreaChange(targetAreaInput, e.target.value, measurementUnit, unitW, unitH)}
+                  style={{ width: '100%', padding: '6px 8px', fontSize: '0.85rem', borderRadius: '4px', border: '1px solid #cbd5e1', outline: 'none', background: '#fff' }}
+                >
+                  <option value="16:9">16 : 9 (Widescreen HD)</option>
+                  <option value="4:3">4 : 3 (Standard)</option>
+                  <option value="21:9">21 : 9 (Ultrawide)</option>
+                  <option value="8:3">8 : 3 (Banner Screen)</option>
+                  <option value="1:1">1 : 1 (Square)</option>
+                </select>
+              </div>
+              <div style={{ background: '#f8fafc', padding: '8px', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '0.75rem', marginTop: '4px' }}>
+                <div style={{ color: '#0284c7', fontWeight: 'bold' }}>⚡ Grid Achieved: {widthCols} x {heightRows} ({totalUnits} Pcs)</div>
+                <div style={{ color: '#475569' }}>Area: {formatAreaWithUnit(parseFloat(totalArea), measurementUnit)}</div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Panel 4: Control System */}

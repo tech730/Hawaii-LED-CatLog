@@ -27,6 +27,7 @@ export interface ScreenDrawingProps {
   receivingCardMaxW?: number;
   receivingCardMaxH?: number;
   powerSupplyQty?: number;
+  measurementUnit?: 'm' | 'ft' | 'in' | 'mm';
 }
 
 type ViewMode = 'front' | 'top' | 'side' | 'data' | 'power';
@@ -38,6 +39,15 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
   const [showDimensions] = useState(true);
   const [showHumanScale] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  // Unit length formatter
+  const formatLengthWithUnit = (meters: number) => {
+    const unit = props.measurementUnit || 'm';
+    if (unit === 'ft') return `${(meters * 3.28084).toFixed(2)} ft`;
+    if (unit === 'in') return `${(meters * 39.3701).toFixed(1)} in`;
+    if (unit === 'mm') return `${Math.round(meters * 1000)} mm`;
+    return `${meters.toFixed(2)} m`;
+  };
 
   // Exact millimeter calculations
   const totalWidthMm = Math.round(Number(props.totalWidthM) * 1000);
@@ -166,7 +176,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
       {showDims && (
         <div style={{ position: 'absolute', top: '-40px', left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ fontSize: '0.8rem', color: theme.dimLine, fontWeight: 'bold', marginBottom: '2px' }}>
-            W: {props.totalWidthM} m ({totalWidthMm} mm) - {props.resW} px
+            W: {formatLengthWithUnit(Number(props.totalWidthM))} ({totalWidthMm} mm) - {props.resW} px
           </div>
           <div style={{ width: '100%', borderBottom: `1.5px dashed ${theme.dimLine}`, position: 'relative' }}>
             <div style={{ position: 'absolute', left: 0, top: '-5px', width: '2px', height: '10px', background: theme.dimLine }} />
@@ -183,7 +193,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
             <div style={{ position: 'absolute', bottom: 0, right: '-5px', width: '10px', height: '2px', background: theme.dimLine }} />
           </div>
           <div style={{ fontSize: '0.8rem', color: theme.dimLine, fontWeight: 'bold', whiteSpace: 'nowrap' }}>
-            H: {props.totalHeightM} m <br/>
+            H: {formatLengthWithUnit(Number(props.totalHeightM))} <br/>
             ({totalHeightMm} mm) <br/>
             {props.resH} px
           </div>
