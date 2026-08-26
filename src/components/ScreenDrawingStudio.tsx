@@ -318,7 +318,7 @@ export const ScreenDrawingStudio: React.FC<ScreenDrawingProps> = (props) => {
         {/* Stepped Leader Callouts */}
         <line x1="160" y1="215" x2="160" y2="171" stroke={theme.textMain} strokeWidth="1" markerEnd={`url(#arrowTop_${theme.bg.replace('#','')})`} />
         <text x="160" y="232" textAnchor="middle" fill={theme.textMain} fontSize="12.5" fontWeight="500">
-          P{props.pitch} LED Module ({unitWidthMm}mm)
+          P{props.pitch} LED Module ({unitWidthMm}x{unitHeightMm}mm)
         </text>
 
         <line x1="300" y1="255" x2="300" y2="157" stroke={theme.textMain} strokeWidth="1" markerEnd={`url(#arrowTop_${theme.bg.replace('#','')})`} />

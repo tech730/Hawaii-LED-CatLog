@@ -131,9 +131,11 @@ const Dashboard: React.FC = () => {
   // Measurement & Sizing State
   type MeasurementUnit = 'm' | 'ft' | 'in' | 'mm';
   type SizingMode = 'module_count' | 'dimensions' | 'target_area';
+  type ModuleOrientation = 'horizontal' | 'vertical';
 
   const [measurementUnit, setMeasurementUnit] = useState<MeasurementUnit>('m');
   const [sizingMode, setSizingMode] = useState<SizingMode>('module_count');
+  const [moduleOrientation, setModuleOrientation] = useState<ModuleOrientation>('horizontal');
   const [targetWidthInput, setTargetWidthInput] = useState<string>('1.6');
   const [targetHeightInput, setTargetHeightInput] = useState<string>('0.48');
   const [targetAreaInput, setTargetAreaInput] = useState<string>('0.77');
@@ -275,14 +277,14 @@ const Dashboard: React.FC = () => {
   const isRental = activeSceneId === 'rental';
   const isGobCabinet = activeSceneId === 'gob_cabinet';
   
-  let unitW = 0.32;
-  let unitH = 0.16;
+  let unitW = moduleOrientation === 'vertical' ? 0.16 : 0.32;
+  let unitH = moduleOrientation === 'vertical' ? 0.32 : 0.16;
   if (isRental) {
     unitW = 0.5;
     unitH = 0.5;
   } else if (isGobCabinet) {
-    unitW = 0.6; // 600mm
-    unitH = 0.3375; // 337.5mm
+    unitW = moduleOrientation === 'vertical' ? 0.3375 : 0.6; // 600mm or 337.5mm
+    unitH = moduleOrientation === 'vertical' ? 0.6 : 0.3375;
   }
   
   const totalWidth = (widthCols * unitW).toFixed(2);
@@ -369,7 +371,11 @@ const Dashboard: React.FC = () => {
     { id: '12', group: 'p2', category: 'Heat', label: 'Heat Output', value: `${heatTyp} / ${heatMax}`, unit: 'BTU/h' },
   ];
 
-  const panelSpec = isRental ? '500x500mm' : (isGobCabinet ? '600x337.5mm' : '320x160mm');
+  const panelSpec = isRental
+    ? '500x500mm'
+    : (isGobCabinet
+      ? (moduleOrientation === 'vertical' ? '337.5x600mm' : '600x337.5mm')
+      : (moduleOrientation === 'vertical' ? '160x320mm' : '320x160mm'));
   const panelTypeStr = isRental ? 'Rental' : (isGobCabinet ? 'GOB Cabinet' : (isOutdoor ? 'Outdoor' : 'Indoor'));
 
   const receivingCardModelStr = isGobCabinet ? 'Novastar' : activeCard.model;
@@ -402,7 +408,7 @@ const Dashboard: React.FC = () => {
       setCustomParams(getDefaultParams());
       setCustomBOM(getDefaultBOM());
     }
-  }, [activeSceneId, activeBrand, activePitch, widthCols, heightRows, activeProcessor, activePower, activeCard, measurementUnit, isReportCustomized]);
+  }, [activeSceneId, activeBrand, activePitch, widthCols, heightRows, activeProcessor, activePower, activeCard, measurementUnit, moduleOrientation, isReportCustomized]);
   const SimulatorVisual = (
     <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: '400px' }}>
       
@@ -740,6 +746,55 @@ const Dashboard: React.FC = () => {
               </button>
             ))}
           </div>
+
+          {/* Module Orientation Control */}
+          {!isRental && (
+            <div style={{ marginTop: '12px' }}>
+              <label style={{ fontSize: '0.7rem', color: '#64748b', display: 'block', marginBottom: '4px', fontWeight: '600' }}>
+                MODULE ORIENTATION
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+                <button
+                  onClick={() => {
+                    setModuleOrientation('horizontal');
+                    if (sizingMode === 'dimensions') handleDimensionsChange(targetWidthInput, targetHeightInput, measurementUnit, 0.32, 0.16);
+                    else if (sizingMode === 'target_area') handleTargetAreaChange(targetAreaInput, targetRatio, measurementUnit, 0.32, 0.16);
+                  }}
+                  style={{
+                    padding: '5px',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    background: moduleOrientation === 'horizontal' ? '#0f172a' : '#f1f5f9',
+                    color: moduleOrientation === 'horizontal' ? '#fff' : '#475569',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ↔ 320x160mm
+                </button>
+                <button
+                  onClick={() => {
+                    setModuleOrientation('vertical');
+                    if (sizingMode === 'dimensions') handleDimensionsChange(targetWidthInput, targetHeightInput, measurementUnit, 0.16, 0.32);
+                    else if (sizingMode === 'target_area') handleTargetAreaChange(targetAreaInput, targetRatio, measurementUnit, 0.16, 0.32);
+                  }}
+                  style={{
+                    padding: '5px',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    background: moduleOrientation === 'vertical' ? '#0f172a' : '#f1f5f9',
+                    color: moduleOrientation === 'vertical' ? '#fff' : '#475569',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ↕ 160x320mm
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Panel 3: Size & Measurement Type */}
